@@ -1,0 +1,112 @@
+package com.aloanswer.alo_answer
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
+import android.content.res.Configuration
+import java.util.Locale
+
+/**
+ * App settings in one SharedPreferences file, written by the home screen and
+ * read by the call receiver and services at any time (no screen needed).
+ */
+object Settings {
+    private const val FILE = "alo_settings"
+
+    const val KEY_ENABLED = "enabled"
+    const val KEY_SENSITIVITY = "sensitivity"
+    const val KEY_LAST_CALL_STATE = "last_call_state"
+    const val KEY_LAST_CALL_STATE_AT = "last_call_state_at"
+    const val KEY_INCOMING_ACTIVE = "incoming_active"
+    const val KEY_LAST_SPEAKER = "last_speaker_result"
+    const val KEY_ASKED_PREFIX = "asked_perm_"
+    /** "uz", "ru", "en", or "" = follow the phone's language. Set from the in-app picker. */
+    const val KEY_LANGUAGE = "language"
+    private val LANGUAGES = setOf("", "uz", "ru", "en")
+
+    const val DEFAULT_SENSITIVITY = 0.5f
+
+    fun prefs(ctx: Context): SharedPreferences =
+        ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    fun isEnabled(ctx: Context) = prefs(ctx).getBoolean(KEY_ENABLED, false)
+    fun sensitivity(ctx: Context) =
+        prefs(ctx).getFloat(KEY_SENSITIVITY, DEFAULT_SENSITIVITY).coerceIn(0f, 1f)
+
+    fun language(ctx: Context) = prefs(ctx).getString(KEY_LANGUAGE, "") ?: ""
+
+    /** Context whose resources use the in-app language (or the phone's, if none chosen). */
+    fun localized(ctx: Context): Context {
+        val lang = language(ctx)
+        if (lang.isEmpty()) return ctx
+        val config = Configuration(ctx.resources.configuration)
+        config.setLocale(Locale.forLanguageTag(lang))
+        return ctx.createConfigurationContext(config)
+    }
+
+    /** Localized string for notifications and the event log (works with no screen open). */
+    fun str(ctx: Context, id: Int, vararg args: Any): String = localized(ctx).getString(id, *args)
+
+    fun lastCallState(ctx: Context) = prefs(ctx).getString(KEY_LAST_CALL_STATE, "") ?: ""
+    fun setLastCallState(ctx: Context, s: String) {
+        // commit(): ArmActivity / the service read this right after.
+        prefs(ctx).edit()
+            .putString(KEY_LAST_CALL_STATE, s)
+            .putLong(KEY_LAST_CALL_STATE_AT, System.currentTimeMillis())
+            .commit()
+    }
+
+    fun msSinceLastCallState(ctx: Context): Long =
+        System.currentTimeMillis() - prefs(ctx).getLong(KEY_LAST_CALL_STATE_AT, 0L)
+
+    /** True between a RINGING we acted on and the following IDLE (filters out outgoing calls). */
+    fun incomingActive(ctx: Context) = prefs(ctx).getBoolean(KEY_INCOMING_ACTIVE, false)
+    fun setIncomingActive(ctx: Context, v: Boolean) {
+        prefs(ctx).edit().putBoolean(KEY_INCOMING_ACTIVE, v).commit()
+    }
+
+    fun lastSpeakerResult(ctx: Context) = prefs(ctx).getString(KEY_LAST_SPEAKER, "") ?: ""
+    fun setLastSpeakerResult(ctx: Context, s: String) {
+        prefs(ctx).edit().putString(KEY_LAST_SPEAKER, s).apply()
+    }
+
+    // ---- Debug-build-only test hook (see DebugReceiver) ----
+    const val KEY_DEBUG_FAKE_DETECTOR = "debug_fake_detector"
+
+    fun isDebuggable(ctx: Context) =
+        (ctx.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
+    /** Never true in a release (non-debuggable) build, whatever is stored. */
+    fun debugFakeDetector(ctx: Context) =
+        isDebuggable(ctx) && prefs(ctx).getBoolean(KEY_DEBUG_FAKE_DETECTOR, false)
+
+    fun setDebugFakeDetector(ctx: Context, on: Boolean) {
+        prefs(ctx).edit().putBoolean(KEY_DEBUG_FAKE_DETECTOR, on).commit()
+    }
+
+    const val KEY_DEBUG_FAKE_BLUETOOTH = "debug_fake_bluetooth"
+
+    /** Pretend Bluetooth headset in the call screen's audio picker. Never true in a release build. */
+    fun debugFakeBluetooth(ctx: Context) =
+        isDebuggable(ctx) && prefs(ctx).getBoolean(KEY_DEBUG_FAKE_BLUETOOTH, false)
+
+    fun setDebugFakeBluetooth(ctx: Context, on: Boolean) {
+        prefs(ctx).edit().putBoolean(KEY_DEBUG_FAKE_BLUETOOTH, on).commit()
+    }
+
+    fun toMap(ctx: Context): Map<String, Any> = mapOf(
+        KEY_ENABLED to isEnabled(ctx),
+        KEY_SENSITIVITY to sensitivity(ctx).toDouble(),
+        KEY_LANGUAGE to language(ctx),
+    )
+
+    fun save(ctx: Context, map: Map<*, *>) {
+        val e = prefs(ctx).edit()
+        (map[KEY_ENABLED] as? Boolean)?.let { e.putBoolean(KEY_ENABLED, it) }
+        (map[KEY_SENSITIVITY] as? Number)?.let {
+            e.putFloat(KEY_SENSITIVITY, it.toFloat().coerceIn(0f, 1f))
+        }
+        (map[KEY_LANGUAGE] as? String)?.takeIf { it in LANGUAGES }?.let { e.putString(KEY_LANGUAGE, it) }
+        e.apply()
+    }
+}

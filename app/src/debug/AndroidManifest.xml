@@ -1,0 +1,18 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- DEBUG BUILDS ONLY: adb test hook to simulate the wake word (see DebugReceiver.kt).
+             DUMP is held by the adb shell but can't be obtained by normal apps. -->
+        <receiver
+            android:name="com.aloanswer.alo_answer.DebugReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.aloanswer.alo_answer.debug.FAKE_DETECTOR" />
+                <action android:name="com.aloanswer.alo_answer.debug.SAY_ALO" />
+                <action android:name="com.aloanswer.alo_answer.debug.ENABLE" />
+                <action android:name="com.aloanswer.alo_answer.debug.RECOGNIZE_PCM" />
+                <action android:name="com.aloanswer.alo_answer.debug.FAKE_BLUETOOTH" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

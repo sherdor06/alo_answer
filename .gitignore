@@ -1,0 +1,15 @@
+# Gradle / Android Studio
+.gradle/
+.kotlin/
+build/
+/captures/
+.cxx/
+*.iml
+.idea/
+.DS_Store
+/local.properties
+
+# Release signing: never share these
+key.properties
+**/*.keystore
+**/*.jks

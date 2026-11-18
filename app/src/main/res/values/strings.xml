@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English (default). Uzbek: values-uz, Russian: values-ru.
+     The language follows the in-app choice (Settings.KEY_LANGUAGE), or the phone's language if none was chosen. -->
+<resources>
+    <!-- Notification channels / notifications -->
+    <string name="notif_problem_channel">Problems</string>
+    <string name="notif_problem_channel_desc">Tells you when voice answering could not start</string>
+    <string name="notif_problem_title">Voice answer didn’t start</string>
+    <string name="notif_listen_channel">Listening</string>
+    <string name="notif_listen_channel_desc">Shown while the microphone is open</string>
+    <string name="notif_listen_title_call">Say “alo” to answer</string>
+    <string name="notif_listen_title_test">Test: listening for “alo”</string>
+    <string name="notif_listen_text">Microphone is open</string>
+    <string name="notif_action_stop">Stop</string>
+
+    <!-- Event log messages -->
+    <string name="ev_ringing">Incoming call ringing</string>
+    <string name="ev_offhook">Call answered (off-hook)</string>
+    <string name="ev_missed">Stopped ringing (missed or declined)</string>
+    <string name="ev_call_ended">Call ended</string>
+    <string name="ev_listening_call">Listening for the wake word (call ringing)</string>
+    <string name="ev_listening_test">Test listening started</string>
+    <string name="ev_wake">Wake word heard</string>
+    <string name="ev_wake_test">Wake word heard (test)</string>
+    <string name="ev_answer_requested">acceptRingingCall() called; waiting for off-hook</string>
+    <string name="ev_answer_no_perm">Answer-calls permission not granted</string>
+    <string name="ev_timeout">No wake word within the time limit; mic released</string>
+    <string name="ev_stopped">Listening stopped</string>
+    <string name="ev_not_ringing">Phone stopped ringing before listening started</string>
+    <string name="ev_call_state">Call state %1$s; mic released</string>
+    <string name="ev_no_mic_perm">Microphone permission not granted</string>
+    <string name="ev_missing_model">Speech model missing (assets/%1$s)</string>
+    <string name="ev_detector_error">Speech recognizer error: %1$s</string>
+    <string name="ev_detector_init">Speech recognizer failed to start: %1$s</string>
+    <string name="ev_speaker_ok">AudioManager reports the speaker is selected (confirm by ear): %1$s</string>
+    <string name="ev_speaker_failed">Speaker routing did not take effect: %1$s</string>
+
+
+    <!-- Why listening could not start -->
+    <string name="blocked_overlay">Android blocked the listener: “Display over other apps” is off for Alo Answer.</string>
+    <string name="blocked_xiaomi">Android blocked the listener from opening. On Xiaomi/Redmi allow “Display pop-up windows while running in the background” and “Show on Lock screen” (App info → Other permissions).</string>
+    <string name="err_open_listener">Couldn’t open the listener: %1$s</string>
+    <string name="err_start_listening">Couldn’t start listening: %1$s</string>
+
+    <!-- Accessibility service (auto speaker) -->
+    <string name="a11y_label">Alo Answer: speaker</string>
+    <string name="a11y_description">After Alo Answer picks up a call because you said “alo”, this presses the Speaker button on the call screen so you can talk hands-free. At any other time it does nothing, and it stores nothing.</string>
+    <string name="ev_speaker_clicked">Speaker turned on by pressing the call screen’s button: %1$s</string>
+    <string name="ev_speaker_click_failed">Couldn’t press the Speaker button (%1$s). Tried AudioManager instead:</string>
+    <string name="ev_speaker_no_a11y">Auto speaker is off (the accessibility service isn’t enabled). Tried AudioManager instead:</string>
+
+    <!-- Default phone app (dialer mode) -->
+    <string name="app_title">Alo Answer</string>
+    <string name="dialer_shortcut">Dial</string>
+    <string name="dialer_call">Call</string>
+    <string name="dialer_settings">Settings</string>
+    <string name="dialer_need_permission">Allow phone calls to dial a number.</string>
+    <string name="incall_incoming">Incoming call</string>
+    <string name="incall_dialing">Calling…</string>
+    <string name="incall_connecting">Connecting…</string>
+    <string name="incall_on_hold">On hold</string>
+    <string name="incall_ended">Call ended</string>
+    <string name="incall_unknown">Unknown number</string>
+    <string name="incall_answer">Answer</string>
+    <string name="incall_decline">Decline</string>
+    <string name="incall_mute">Mute</string>
+    <string name="incall_keypad">Keypad</string>
+    <string name="incall_speaker">Speaker</string>
+    <string name="incall_hold">Hold</string>
+    <string name="incall_end">End</string>
+    <string name="incall_choose_sim">Call with</string>
+    <string name="incall_say_alo">Say “allo” to answer</string>
+    <string name="incall_listening">Listening for “allo”…</string>
+    <string name="incall_heard">“Allo” heard — answering</string>
+    <string name="incall_voice_off">Voice answer is off</string>
+    <string name="notif_incoming_channel">Incoming calls</string>
+    <string name="notif_ongoing_channel">Ongoing calls</string>
+    <string name="notif_ongoing_title">Ongoing call</string>
+    <string name="ev_answer_dialer">Answered by the app itself (default phone app)</string>
+    <string name="ev_speaker_dialer">Speaker turned on by the app itself (default phone app): %1$s</string>
+    <string name="ev_speaker_dialer_failed">Couldn’t switch the call to the speaker: %1$s</string>
+    <string name="blocked_dialer">The call screen couldn’t open over the app you were using. Tap the incoming-call notification to start listening.</string>
+
+    <!-- Phone app tabs: recents and contacts -->
+    <string name="tab_recents">Recents</string>
+    <string name="tab_contacts">Contacts</string>
+    <string name="recents_empty">No calls yet</string>
+    <string name="contacts_empty">No contacts</string>
+    <string name="perm_call_log">Allow access to call history to see your recent calls.</string>
+    <string name="perm_contacts">Allow access to contacts to see names and search.</string>
+    <string name="perm_allow">Allow</string>
+    <string name="search_contacts">Search contacts</string>
+    <string name="recents_yesterday">Yesterday</string>
+    <string name="calltype_incoming">Incoming</string>
+    <string name="calltype_outgoing">Outgoing</string>
+    <string name="calltype_missed">Missed</string>
+    <string name="calltype_rejected">Declined</string>
+
+    <!-- Audio output picker on the call screen -->
+    <string name="incall_audio">Audio</string>
+    <string name="route_title">Audio output</string>
+    <string name="route_phone">Phone</string>
+    <string name="route_bluetooth">Bluetooth</string>
+    <string name="route_wired">Wired headset</string>
+    <string name="route_wired_short">Headset</string>
+    <string name="ev_speaker_kept">The call stayed on %1$s (a connected device), so the speaker was left off</string>
+
+    <!-- ===== App screens (home, permissions, test, event log, Xiaomi setup) ===== -->
+    <string name="ui_allow">Allow</string>
+    <string name="ui_allow_all_to_continue">Allow all of the above to continue</string>
+    <string name="ui_allowed">Allowed</string>
+    <string name="ui_auto_speaker_off">Off. Android doesn’t let an app move a call to the speaker directly, so the app presses the call screen’s Speaker button for you. For that, turn on “Alo Answer: speaker” in Accessibility.</string>
+    <string name="ui_auto_speaker_on">On: after answering, the app presses the Speaker button on the call screen.</string>
+    <string name="ui_auto_speaker_steps">Settings → Additional settings → Accessibility → Downloaded apps → Alo Answer: speaker → On.\nIf the switch is greyed out: Settings → Apps → Alo Answer → ⋮ → Allow restricted settings, then try again.</string>
+    <string name="ui_auto_speaker_title">Auto speaker</string>
+    <string name="ui_back">Back</string>
+    <string name="ui_battery_reported_off">Android reports battery optimization off ✓. (Xiaomi\'s own setting may not show up here.)</string>
+    <string name="ui_battery_reported_on">Android reports battery optimization on. (Xiaomi\'s own setting may not show up here.)</string>
+    <string name="ui_blocker_model">add the Uzbek speech model (assets/model-uz) and rebuild</string>
+    <string name="ui_blocker_model_loading">wait until the speech model is ready</string>
+    <string name="ui_blocker_perms">allow all permissions</string>
+    <string name="ui_cancel">Cancel</string>
+    <string name="ui_check_battery">Battery optimization off (as Android reports it)</string>
+    <string name="ui_check_model_asset">Uzbek speech model in the app (assets/model-uz)</string>
+    <string name="ui_check_model_ready">Model ready on this phone (offline, no key needed)</string>
+    <string name="ui_clear">Clear</string>
+    <string name="ui_clear_log_q">Clear the event log?</string>
+    <string name="ui_continue_btn">Continue</string>
+    <string name="ui_dialer_not_available">This phone doesn’t allow changing the phone app.</string>
+    <string name="ui_dialer_off">Make Alo Answer your phone app, and it handles calls itself: the most reliable voice answer, and the speaker turns on directly (no accessibility tricks). It replaces the phone app’s call screens and dial pad; you can switch back any time in Settings → Apps → Default apps.</string>
+    <string name="ui_dialer_on">On. Alo Answer shows the call screen itself: say “allo” and it answers and turns on the speaker directly. Auto speaker and “Display over other apps” aren’t needed.</string>
+    <string name="ui_dialer_title">Default phone app</string>
+    <string name="ui_event_answer_failed">Answer failed</string>
+    <string name="ui_event_answer_requested">Answer requested</string>
+    <string name="ui_event_error">Error</string>
+    <string name="ui_event_idle">Call over</string>
+    <string name="ui_event_listening">Listening</string>
+    <string name="ui_event_log">Event log</string>
+    <string name="ui_event_mic_blocked">Blocked by Android</string>
+    <string name="ui_event_offhook">Call answered</string>
+    <string name="ui_event_ring">Ring detected</string>
+    <string name="ui_event_speaker_failed">Speaker: failed</string>
+    <string name="ui_event_speaker_kept">Kept on Bluetooth / headset</string>
+    <string name="ui_event_speaker_ok">Speaker: Android reports on</string>
+    <string name="ui_event_stopped">Stopped listening</string>
+    <string name="ui_event_test_hit">Test hit</string>
+    <string name="ui_event_timeout">Timed out</string>
+    <string name="ui_event_wake">Wake word heard</string>
+    <string name="ui_fix">Fix</string>
+    <string name="ui_language">Language</string>
+    <string name="ui_last20">Last 20 events</string>
+    <string name="ui_listens_for">Listens for: %1$s</string>
+    <string name="ui_listens_for_grammar">Listens for: %1$s (only these words)</string>
+    <string name="ui_make_default">Make default</string>
+    <string name="ui_master_off">Off</string>
+    <string name="ui_master_on">On: when the phone rings, say “alo” to answer</string>
+    <string name="ui_master_title">Answer calls by saying “alo”</string>
+    <string name="ui_model_preparing">Preparing the speech model (first start takes a few seconds)…</string>
+    <string name="ui_no_events">No events yet. They appear here when a call rings.</string>
+    <string name="ui_not_listening">Not listening</string>
+    <string name="ui_not_xiaomi">These steps are for Xiaomi, Redmi and POCO phones. This phone reports itself as %1$s.</string>
+    <string name="ui_onboarding_intro">Alo Answer needs these to pick up calls when you say “alo”. Each one is used only for what is written under it.</string>
+    <string name="ui_open_accessibility">Open Accessibility</string>
+    <string name="ui_open_app_info">App info</string>
+    <string name="ui_open_dialer">Dial pad</string>
+    <string name="ui_open_settings">Open settings</string>
+    <string name="ui_overlay_allowed">Allowed ✓</string>
+    <string name="ui_overlay_hint">In the list that opens, find Alo Answer and turn the switch on, then come back.</string>
+    <string name="ui_overlay_name">Display over other apps</string>
+    <string name="ui_overlay_not_yet">Not allowed yet</string>
+    <string name="ui_perm_title_answer">Answer calls</string>
+    <string name="ui_perm_title_mic">Microphone</string>
+    <string name="ui_perm_title_notifications">Notifications</string>
+    <string name="ui_perm_title_overlay">Display over other apps</string>
+    <string name="ui_perm_title_phone">Phone state</string>
+    <string name="ui_perm_why_answer">Lets the app pick up the ringing call after you say “alo”.</string>
+    <string name="ui_perm_why_mic">Listens for “alo” only while the phone is ringing (at most 30 seconds) or during a test. Speech is recognized offline on the phone itself; the app has no internet access and does not save the audio.</string>
+    <string name="ui_perm_why_notifications">Android shows a notification whenever the microphone is open. The app also uses notifications to tell you when voice answering could not start, and why.</string>
+    <string name="ui_perm_why_overlay">Android lets an app use the microphone in the background only if listening was started while the app was on screen. So when the phone rings, the app shows an invisible screen for under a second to start listening. Opening that screen needs this permission.</string>
+    <string name="ui_perm_why_phone">Lets the app notice when the phone starts ringing, gets answered or hangs up. The caller\'s number is never read.</string>
+    <string name="ui_permanently_denied">You chose “Don\'t allow” earlier, so Android won\'t ask again. Open Settings → Permissions and allow it there.</string>
+    <string name="ui_permissions">Permissions</string>
+    <string name="ui_perms_missing">Some permissions are missing</string>
+    <string name="ui_say_alo">Say “alo”</string>
+    <string name="ui_sensitivity">Detection sensitivity: %1$s</string>
+    <string name="ui_sensitivity_help">Higher: catches “alo” more easily but answers by mistake more often. Lower: fewer mistakes, but you may need to repeat yourself. Applies from the next call or test.</string>
+    <string name="ui_setup_check">Setup check</string>
+    <string name="ui_speaker_clicked_body">The app pressed the Speaker button on the call screen, and Android confirms the call audio is on the loudspeaker.</string>
+    <string name="ui_speaker_clicked_head">Speaker turned on</string>
+    <string name="ui_speaker_dialer_body">As the default phone app, Alo Answer switched the call to the loudspeaker itself.</string>
+    <string name="ui_speaker_dialer_head">Speaker turned on</string>
+    <string name="ui_speaker_fail_body">The call was answered but stayed on the earpiece as far as Android reports. Turn on “Auto speaker” below, so the app presses the call screen’s Speaker button for you.</string>
+    <string name="ui_speaker_fail_head">Speaker routing did not work</string>
+    <string name="ui_speaker_kept_body">A Bluetooth device or headset was connected, so the call stayed on it, as on any phone. The loudspeaker is turned on only when nothing is connected. You can switch on the call screen with the audio button.</string>
+    <string name="ui_speaker_kept_head">Kept on Bluetooth / headset</string>
+    <string name="ui_speaker_none_body">After the app answers a call, the result of the speaker attempt shows here.</string>
+    <string name="ui_speaker_none_head">No call answered yet</string>
+    <string name="ui_speaker_ok_body">This only means Android accepted the request. An app that is not your phone app cannot reliably control the call\'s audio, so check by ear whether the last call really came out of the loudspeaker.</string>
+    <string name="ui_speaker_ok_head">Android says the speaker was selected</string>
+    <string name="ui_speaker_title">Loudspeaker (best effort)</string>
+    <string name="ui_start_again">Start again</string>
+    <string name="ui_starting">Starting…</string>
+    <string name="ui_step_autostart_btn">Open Autostart</string>
+    <string name="ui_step_autostart_path">Settings → Apps → Manage apps → Alo Answer → Autostart</string>
+    <string name="ui_step_autostart_title">Autostart: on</string>
+    <string name="ui_step_autostart_why">Without Autostart, HyperOS usually doesn\'t wake the app up for system events such as an incoming call.</string>
+    <string name="ui_step_battery_btn">Open battery settings</string>
+    <string name="ui_step_battery_path">Settings → Apps → Manage apps → Alo Answer → Battery saver → No restrictions</string>
+    <string name="ui_step_battery_title">Battery saver: No restrictions</string>
+    <string name="ui_step_battery_why">Stops HyperOS from freezing the app while it waits for calls.</string>
+    <string name="ui_step_lock_path">Open the app, open Recents, long-press the Alo Answer card and tap the lock icon</string>
+    <string name="ui_step_lock_title">Optional: lock the app in Recents</string>
+    <string name="ui_step_lock_why">Makes HyperOS less likely to clear the app from memory.</string>
+    <string name="ui_step_other_btn">Open Other permissions</string>
+    <string name="ui_step_other_path">Settings → Apps → Manage apps → Alo Answer → Other permissions</string>
+    <string name="ui_step_other_title">Other permissions: pop-up windows + lock screen</string>
+    <string name="ui_step_other_why">Xiaomi adds its own switches that block the invisible listening screen. Turn on “Display pop-up windows while running in the background” and “Show on Lock screen”.</string>
+    <string name="ui_step_overlay_btn">Open setting</string>
+    <string name="ui_step_overlay_path">Settings → Apps → Manage apps → Alo Answer → Display over other apps</string>
+    <string name="ui_step_overlay_title">Display over other apps: on</string>
+    <string name="ui_step_overlay_why">The Android permission that lets the app open its listening screen while the phone rings.</string>
+    <string name="ui_test_busy">A call is ringing right now. Try the test after it ends.</string>
+    <string name="ui_test_footnote">Listens for up to 60 seconds and never answers anything. During a real call the ringtone plays next to the microphone, which can make “alo” harder to catch than it is here. Also try it from a meter or two away.</string>
+    <string name="ui_test_listening">Test listening</string>
+    <string name="ui_to_turn_on">To turn on: %1$s</string>
+    <string name="ui_xiaomi_failed">Couldn\'t open settings. Use the path shown.</string>
+    <string name="ui_xiaomi_fallback">The Xiaomi screen wasn\'t found on this version, so a general Android settings screen opened instead. Use the path shown.</string>
+    <string name="ui_xiaomi_footer">Menu names differ between MIUI and HyperOS versions. If a button lands on the wrong screen, follow the path instead. Then test with a real call from another phone and check the Event log.</string>
+    <string name="ui_xiaomi_intro">HyperOS stops background apps much more aggressively than plain Android. Without these settings the phone may ring and nothing happens.</string>
+    <string name="ui_xiaomi_setup">Xiaomi / Redmi setup</string>
+    <plurals name="ui_heard_times">
+        <item quantity="one">Heard “alo” %d time</item>
+        <item quantity="other">Heard “alo” %d times</item>
+    </plurals>
+    <string name="ui_lang_uz" translatable="false">Oʻzbekcha</string>
+    <string name="ui_lang_ru" translatable="false">Русский</string>
+    <string name="ui_lang_en" translatable="false">English</string>
+</resources>

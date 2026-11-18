@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App screens (home, permissions, test, event log, Xiaomi setup): framework Material,
+         light. Dark in values-night; transparent bars from API 27 (values-v27); splash in -v31. -->
+    <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/app_bg</item>
+        <item name="android:colorPrimary">@color/app_primary</item>
+        <item name="android:colorAccent">@color/app_primary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <!-- Android 8.0 can't draw dark navigation icons: keep a scrim behind the white ones -->
+        <item name="android:navigationBarColor">#66000000</item>
+    </style>
+
+    <!-- Fully transparent, no animations: ArmActivity is on screen for well under a second -->
+    <style name="ArmTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+    <!-- Native call screen and dial pad (framework Material, dark) -->
+    <style name="CallTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/call_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:colorAccent">@color/ic_launcher_background</item>
+    </style>
+</resources>

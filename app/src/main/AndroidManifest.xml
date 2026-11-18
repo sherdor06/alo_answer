@@ -1,0 +1,154 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Call state + answering (runtime permissions, PHONE group) -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
+    <!-- Wake word -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Notifications: the "mic is open" FGS notification + problem notices (runtime on 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Foreground service with microphone type -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- Normal (install-time) permission needed by setSpeakerphoneOn / setCommunicationDevice -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- "Display over other apps": the background-activity-launch exemption that lets
+         CallStateReceiver open the invisible ArmActivity while the phone rings -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Default phone app (dialer mode): place calls, full-screen incoming call screen,
+         screen off at the ear during a call -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Phone app tabs: Recents (call history) and Contacts; caller names -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <application
+        android:label="Alo Answer"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/AppTheme">
+        <!-- Home screen (native views, see ui/Screen.kt) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Long-press the app icon: "Dial" -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+        <activity android:name=".ui.OnboardingActivity" android:exported="false" />
+        <activity android:name=".ui.TestListenActivity" android:exported="false" />
+        <activity android:name=".ui.EventLogActivity" android:exported="false" />
+        <activity android:name=".ui.XiaomiSetupActivity" android:exported="false" />
+
+        <!-- ============ Default phone app (ROLE_DIALER) ============
+             Requirements (InCallService docs): handle ACTION_DIAL with a dial pad, and implement
+             InCallService with both an incoming and an ongoing call UI. -->
+        <activity
+            android:name=".dialer.DialerActivity"
+            android:exported="true"
+            android:label="@string/app_title"
+            android:launchMode="singleTask"
+            android:theme="@style/CallTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="tel" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tel" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".dialer.InCallActivity"
+            android:exported="false"
+            android:theme="@style/CallTheme"
+            android:launchMode="singleInstance"
+            android:taskAffinity="com.aloanswer.alo_answer.incall"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
+
+        <!-- Must not be exported=false (docs: Telecom may fail to bind). Telecom keeps
+             playing the ringtone: no android.telecom.IN_CALL_SERVICE_RINGING. -->
+        <service
+            android:name=".dialer.AloInCallService"
+            android:exported="true"
+            android:permission="android.permission.BIND_INCALL_SERVICE">
+            <meta-data
+                android:name="android.telecom.IN_CALL_SERVICE_UI"
+                android:value="true" />
+            <intent-filter>
+                <action android:name="android.telecom.InCallService" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".dialer.CallActionReceiver"
+            android:exported="false" />
+
+        <!-- ACTION_PHONE_STATE_CHANGED is on the implicit-broadcast exception list,
+             so a manifest receiver still gets it on API 26+. Exported because the
+             sender is the system. -->
+        <receiver
+            android:name=".CallStateReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Invisible trampoline: opened while the phone rings so WakeWordService is
+             started while the app is visible (required for microphone access).
+             Own task + affinity so it never brings the app's screens to the front. -->
+        <activity
+            android:name=".ArmActivity"
+            android:exported="false"
+            android:theme="@style/ArmTheme"
+            android:launchMode="singleInstance"
+            android:taskAffinity="com.aloanswer.alo_answer.arm"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
+
+        <!-- Only ever started from a visible activity of this app: ArmActivity
+             (call ringing) or MainActivity (test mode). Starting it straight from
+             CallStateReceiver is NOT allowed to use the mic, see README. -->
+        <service
+            android:name=".WakeWordService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+
+        <!-- Optional: presses the in-call screen's Speaker button right after the app
+             answers (AudioManager can't move a SIM call it doesn't own). The user turns
+             it on in Settings → Accessibility. It ignores all events at other times. -->
+        <service
+            android:name=".SpeakerClickService"
+            android:exported="true"
+            android:label="@string/a11y_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/speaker_accessibility" />
+        </service>
+    </application>
+</manifest>

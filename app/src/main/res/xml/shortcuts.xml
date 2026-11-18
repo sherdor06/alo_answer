@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="dial"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_dialpad"
+        android:shortcutShortLabel="@string/dialer_shortcut">
+        <intent
+            android:action="android.intent.action.DIAL"
+            android:targetPackage="com.aloanswer.alo_answer"
+            android:targetClass="com.aloanswer.alo_answer.dialer.DialerActivity" />
+    </shortcut>
+</shortcuts>

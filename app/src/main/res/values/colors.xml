@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand teal (launcher icon, splash). -->
+    <color name="ic_launcher_background">#00897B</color>
+    <color name="call_bg">#061A19</color>
+
+    <!-- App screens, light (dark versions in values-night). -->
+    <color name="app_bg">#F2F7F6</color>
+    <color name="app_card">#FFFFFF</color>
+    <color name="app_text">#171D1C</color>
+    <color name="app_text_dim">#53625F</color>
+    <color name="app_primary">#00796B</color>
+    <color name="app_on_primary">#FFFFFF</color>
+    <color name="app_primary_container">#C4ECE5</color>
+    <color name="app_on_primary_container">#00201C</color>
+    <color name="app_error">#BA1A1A</color>
+    <color name="app_error_container">#FFDAD6</color>
+    <color name="app_on_error_container">#410002</color>
+    <color name="app_outline">#BCC9C6</color>
+    <color name="app_neutral_container">#DDE5E3</color>
+    <color name="app_hit">#2E9E4F</color>
+</resources>
