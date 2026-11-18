@@ -200,9 +200,9 @@ gives `app/build/outputs/apk/debug/app-debug.apk` (debug key, with the test
 hook).
 
 - **Version:** `versionCode` / `versionName` in `app/build.gradle.kts`
-  (2.0.0 = 2007). Raise `versionCode` for every build you install over an
-  older one. The Flutter builds used 2000 + build number (up to 2006), so
-  2.0.0 installs over them with the same key.
+  (2.0.0 = 2007, 2.0.1 = 2008). Raise `versionCode` for every build you
+  install over an older one. The Flutter builds used 2000 + build number (up
+  to 2006), so 2.0.0 and later install over them with the same key.
 - **arm64-v8a only** (`abiFilters` in `app/build.gradle.kts`), which covers
   every current Redmi. Add `"armeabi-v7a"` for old 32-bit phones or
   `"x86_64"` for an Intel-Mac emulator; each adds its own copy of Vosk.

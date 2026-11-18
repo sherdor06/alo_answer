@@ -610,7 +610,9 @@ class DialerActivity : Activity() {
         col.addView(numRow, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             .apply { bottomMargin = dp(12) })
 
-        col.addView(buildPad())
+        // WRAP_CONTENT width: a vertical LinearLayout gives children MATCH_PARENT by default,
+        // which pins the 3-column grid to the left instead of letting CENTER_HORIZONTAL center it.
+        col.addView(buildPad(), LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         val call = RoundButton(this, R.drawable.ic_call, getString(R.string.dialer_call), 72, 32, Palette.GREEN)
         call.onClick { placeCall(number.toString()) }
