@@ -141,7 +141,8 @@ app):
 - **Our buttons:** End and Decline work.
 - **Outgoing call:** from our dial pad, it connected with a timer.
 
-- **Phone app tabs** (`DialerActivity`): **Recents · Contacts · Keypad**.
+- **Phone app tabs** (`DialerActivity`): **Recents · Contacts · Keypad**. It
+  always opens on Keypad.
   - **Recents** (`READ_CALL_LOG`): incoming / outgoing / missed / declined
     icons, times and durations, and contact names (from `CACHED_NAME` or a
     contacts lookup). Tap to call back; long-press to put the number on the
@@ -158,10 +159,24 @@ app):
   - Searching “dil” filtered the contacts.
   - An incoming call from a saved number showed the contact name.
 
-**Not built yet (next phases):**
-- an audio route picker for Bluetooth;
-- conference / call-waiting screens;
-- the Play build: a flavor without the overlay and Accessibility code.
+**Added in 2.1** (verified on the emulator):
+- The app icon opens the dial pad (as the default phone app); settings via ⋮.
+- Dial pad: smart dial (contacts by T9 name, Latin and Cyrillic, or number),
+  copy/paste, long-press 1 = voicemail, call button recalls the last number.
+- Recents: grouped calls, All / Missed filter, missed badge; details sheet with
+  message, copy, edit, add/open contact, block, delete (`WRITE_CALL_LOG`).
+- Contacts: photos, favourites, letter headers, new contact, call / message.
+- Missed-call notification (`ACTION_SHOW_MISSED_CALLS_NOTIFICATION`) with
+  Call back / Message; seen calls are marked read by the app.
+- Call screen: call waiting (hold and answer / end and answer), add call,
+  swap, merge (conference), reply with a message, contact photo, SIM name.
+- Settings: call forwarding/waiting (system call settings), SIM accounts,
+  blocked numbers. Light and dark themes for the phone app.
+- Not verifiable on the emulator: call waiting holds the first call on a
+  real network (the emulator modem keeps both active).
+
+**Not built yet:** the Play build (a flavor without the overlay and
+Accessibility code).
 
 ## Wake word and speech model
 
@@ -403,14 +418,16 @@ then strip the WAV header, for example with Python's `wave` module.
 
 ## Languages
 
-The UI comes in **Oʻzbekcha, Русский and English**. You can switch with the
-translate button (文A) on the home and permissions screens.
-- With no choice made, the app follows the phone's language: Uzbek or
-  Russian, otherwise English.
-- The choice is stored in `alo_settings` (`language`), so the call screen,
-  notifications and event-log messages use it too. Every screen applies it
-  through `Settings.localized()`; a screen that is open while you switch is
-  rebuilt when you return to it.
+The UI comes in **Oʻzbekcha, Русский and English**, plus “Phone language”
+(follow the phone). One setting for the whole app: Settings → General →
+Language (or 文A on the permissions screen).
+- Android 13+: stored as the system per-app language (`LocaleManager`,
+  `res/xml/locale_config.xml`), so it also appears in the phone's Settings →
+  Apps → Alo Answer → Language, and every open screen switches at once.
+  A choice from an older version is handed over once (`App`).
+- Android 8–12: stored in `alo_settings` (`language`); every screen
+  (including the dial pad and call screen) rebuilds itself when you return.
+- Notifications and services use it through `Settings.localized()`.
 - All texts are in `app/src/main/res/values{,-uz,-ru}/strings.xml`. The texts
   of the app screens start with `ui_` (they were moved over from the Flutter
   version's `lib/l10n.dart` by a script, unchanged).

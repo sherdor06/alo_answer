@@ -89,9 +89,9 @@ class ArmActivity : Activity() {
             )
         } catch (e: Exception) {
             WakeWordService.onForegroundResult = null
-            val msg = Settings.str(this, R.string.err_start_listening, "${e.javaClass.simpleName}: ${e.message}")
+            val msg = EventLog.Msg(R.string.err_start_listening, "${e.javaClass.simpleName}: ${e.message}")
             EventLog.add(this, EventLog.MIC_BLOCKED, msg)
-            ProblemNotification.show(this, msg)
+            ProblemNotification.show(this, Settings.str(this, msg.res, *msg.args))
             finish()
             return
         }

@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings as AndroidSettings
+import com.aloanswer.alo_answer.dialer.DialerRole
 
 /**
  * Permission state for the permissions screen and the home screen.
@@ -44,7 +45,14 @@ object PermissionHelper {
 
     fun statusAll(activity: Activity): Map<String, String> = ALL.associateWith { status(activity, it) }
 
-    fun allGranted(activity: Activity) = ALL.all { status(activity, it) == GRANTED }
+    /**
+     * What voice answer needs right now. "Display over other apps" only opens the invisible
+     * listening screen; as the default phone app our own call screen does that instead.
+     */
+    fun required(activity: Activity): List<String> =
+        if (DialerRole.isDefault(activity)) ALL - OVERLAY else ALL
+
+    fun allGranted(activity: Activity) = required(activity).all { status(activity, it) == GRANTED }
 
     fun markAsked(activity: Activity, name: String) {
         Settings.prefs(activity).edit().putBoolean(Settings.KEY_ASKED_PREFIX + name, true).apply()

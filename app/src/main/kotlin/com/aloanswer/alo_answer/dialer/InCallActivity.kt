@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.RippleDrawable
 import android.os.Build
@@ -18,6 +19,7 @@ import android.os.SystemClock
 import android.telecom.Call
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
+import android.text.InputType
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.MotionEvent
@@ -25,6 +27,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.view.WindowManager
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
@@ -37,8 +40,10 @@ import com.aloanswer.alo_answer.WakeWordService
 
 /**
  * The call screen while Alo Answer is the default phone app: incoming call
- * (answer / decline / "say allo") and ongoing call (mute, keypad, speaker or
- * audio picker, hold, end). Native framework views only. Shows over the lock screen.
+ * (answer / decline / reply with a message / "say allo"), call waiting (answer
+ * and hold, or end and answer), and the ongoing call (mute, keypad, audio
+ * output, add call, hold, merge / swap, end). Native framework views only.
+ * Shows over the lock screen.
  *
  * While a call rings and voice answer is on, this screen starts
  * WakeWordService: the mic may only be used while our screen is visible.
@@ -69,23 +74,36 @@ class InCallActivity : Activity() {
 
     private val handler = Handler(Looper.getMainLooper())
 
+    private lateinit var otherBar: LinearLayout
+    private lateinit var otherText: TextView
+    private lateinit var otherSwap: TextView
+    private lateinit var avatar: AvatarView
     private lateinit var nameView: TextView
     private lateinit var numberView: TextView
     private lateinit var statusView: TextView
     private lateinit var voiceView: TextView
-    private lateinit var ringingRow: View
+    private lateinit var ringingPanel: View
+    private lateinit var replyBtn: TextView
+    private lateinit var endAndAnswerBtn: TextView
+    private lateinit var waitingHint: TextView
     private lateinit var activePanel: View
     private lateinit var keypadPanel: View
     private lateinit var muteBtn: RoundButton
     private lateinit var speakerBtn: RoundButton
     private lateinit var holdBtn: RoundButton
     private lateinit var keypadBtn: RoundButton
+    private lateinit var addCallBtn: RoundButton
+    private lateinit var mergeBtn: RoundButton
 
     private var proximityLock: PowerManager.WakeLock? = null
     private var endingScheduled = false
     private var accountDialog: AlertDialog? = null
     private var routeDialog: Dialog? = null
     private var routeList: LinearLayout? = null
+    private var replyDialog: Dialog? = null
+    private var createdLang = ""
+    /** Calling account id → SIM name, only with two or more SIMs. */
+    private var simLabels: Map<String, String> = emptyMap()
 
     private val callListener = CallManager.Listener { render() }
     private val eventListener: (Map<String, Any>) -> Unit = { e -> onVoiceEvent(e["type"] as? String, e["msg"] as? String) }
@@ -102,6 +120,7 @@ class InCallActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createdLang = Settings.language(this)
         if (Build.VERSION.SDK_INT >= 27) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -114,10 +133,22 @@ class InCallActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         edgeToEdge()
         setContentView(buildUi())
+        val app = applicationContext
+        Thread {
+            val labels = PhoneSettings.simLabels(app)
+            handler.post {
+                simLabels = labels
+                render()
+            }
+        }.start()
     }
 
     override fun onResume() {
         super.onResume()
+        if (Settings.language(this) != createdLang) {
+            recreate()
+            return
+        }
         lastResumedAt = SystemClock.elapsedRealtime()
         visible = true
         CallNotifications.refresh(this)
@@ -141,6 +172,7 @@ class InCallActivity : Activity() {
         releaseProximity()
         accountDialog?.dismiss()
         routeDialog?.dismiss()
+        replyDialog?.dismiss()
         handler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
@@ -149,6 +181,8 @@ class InCallActivity : Activity() {
 
     private fun maybeStartVoiceAnswer() {
         if (CallManager.ringingCall() == null) return
+        // Call waiting: we're already on a call (and its microphone), so no voice answer.
+        if (CallManager.isCallWaiting()) return
         if (!Settings.isEnabled(this)) {
             voiceView.text = getString(R.string.incall_voice_off)
             return
@@ -183,23 +217,63 @@ class InCallActivity : Activity() {
         }
         endingScheduled = false
         val state = CallManager.stateOf(call)
-        val name = CallManager.displayName(call) ?: getString(R.string.incall_unknown)
-        val number = CallManager.number(call).orEmpty()
-        nameView.text = name
-        numberView.text = number
-        numberView.visibility = if (number.isEmpty() || number == name) View.GONE else View.VISIBLE
-
         val ringing = state == Call.STATE_RINGING
-        ringingRow.visibility = if (ringing) View.VISIBLE else View.GONE
-        voiceView.visibility = if (ringing) View.VISIBLE else View.GONE
+        val waiting = ringing && CallManager.isCallWaiting()
+        val conference = CallManager.isConference(call)
+
+        val number = CallManager.number(call).orEmpty()
+        val name = when {
+            conference -> getString(R.string.incall_conference)
+            else -> CallManager.displayName(call)?.let { if (it == number) PhoneSettings.format(this, it) else it }
+                ?: getString(R.string.incall_unknown)
+        }
+        nameView.text = name
+        val formatted = if (number.isEmpty()) "" else PhoneSettings.format(this, number)
+        val sim = call.details.accountHandle?.id?.let { simLabels[it] }
+        val second = when {
+            conference -> call.children.mapNotNull { ch ->
+                CallManager.displayName(ch)?.let { n -> if (n == CallManager.number(ch)) PhoneSettings.format(this, n) else n }
+            }.joinToString(", ")
+            formatted.isNotEmpty() && formatted != name -> listOfNotNull(formatted, sim).joinToString(" · ")
+            else -> sim.orEmpty()
+        }
+        numberView.text = second
+        numberView.visibility = if (second.isEmpty()) View.GONE else View.VISIBLE
+        val contactName = if (conference) null else CallManager.displayName(call)?.takeIf { it != number }
+        avatar.bind(contactName, contactName ?: number, CallManager.photoUri(call))
+
+        // The other call: on hold, or the one in progress while a new one rings.
+        val other = CallManager.liveCalls().firstOrNull { it != call }
+        if (other != null) {
+            val otherName = if (CallManager.isConference(other)) getString(R.string.incall_conference)
+            else CallManager.displayName(other)?.let { PhoneSettings.format(this, it) } ?: getString(R.string.incall_unknown)
+            otherText.text = getString(
+                if (CallManager.stateOf(other) == Call.STATE_HOLDING) R.string.incall_on_hold_name else R.string.incall_current_name,
+                otherName
+            )
+            otherSwap.visibility = if (!ringing && CallManager.stateOf(other) == Call.STATE_HOLDING) View.VISIBLE else View.GONE
+            otherBar.visibility = View.VISIBLE
+        } else {
+            otherBar.visibility = View.GONE
+        }
+
+        ringingPanel.visibility = if (ringing) View.VISIBLE else View.GONE
+        voiceView.visibility = if (ringing && !waiting) View.VISIBLE else View.GONE
+        replyBtn.visibility = if (ringing && CallManager.canReplyWithMessage(call)) View.VISIBLE else View.GONE
+        endAndAnswerBtn.visibility = if (waiting) View.VISIBLE else View.GONE
+        waitingHint.visibility = if (waiting) View.VISIBLE else View.GONE
         activePanel.visibility = if (ringing) View.GONE else View.VISIBLE
         if (ringing) keypadPanel.visibility = View.GONE
 
         muteBtn.setActive(CallManager.muted)
         renderAudioButton()
         holdBtn.setActive(state == Call.STATE_HOLDING)
-        holdBtn.isEnabled = state == Call.STATE_HOLDING || call.details.can(Call.Details.CAPABILITY_HOLD)
+        holdBtn.isEnabled = state == Call.STATE_HOLDING || CallManager.canHold(call)
         keypadBtn.setActive(keypadPanel.visibility == View.VISIBLE)
+        // Add call: only with one call that can be put on hold.
+        addCallBtn.isEnabled = other == null && state == Call.STATE_ACTIVE && CallManager.canHold(call)
+        // Merge: two calls the network can join.
+        mergeBtn.visibility = if (other != null && CallManager.canMerge(call)) View.VISIBLE else View.INVISIBLE
         renderStatus()
         // Screen off at the ear: only while the audio is on the earpiece.
         val route = CallManager.currentRoute()?.kind
@@ -208,6 +282,7 @@ class InCallActivity : Activity() {
                 (route == CallManager.RouteKind.EARPIECE || (route == null && !CallManager.isSpeakerOn()))
         )
         if (state == Call.STATE_SELECT_PHONE_ACCOUNT) chooseSim(call)
+        if (!ringing) replyDialog?.dismiss()
     }
 
     private fun renderStatus() {
@@ -231,11 +306,13 @@ class InCallActivity : Activity() {
 
     private fun showEnded() {
         statusView.text = getString(R.string.incall_ended)
-        ringingRow.visibility = View.GONE
+        ringingPanel.visibility = View.GONE
         activePanel.visibility = View.GONE
         keypadPanel.visibility = View.GONE
         voiceView.visibility = View.GONE
+        otherBar.visibility = View.GONE
         routeDialog?.dismiss()
+        replyDialog?.dismiss()
         releaseProximity()
         if (!endingScheduled) {
             endingScheduled = true
@@ -267,6 +344,58 @@ class InCallActivity : Activity() {
             .show()
     }
 
+    // ---------------- add call ----------------
+
+    private fun addCall() {
+        try {
+            startActivity(
+                Intent(this, DialerActivity::class.java)
+                    .putExtra(DialerActivity.EXTRA_ADD_CALL, true)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        } catch (_: Exception) {
+        }
+    }
+
+    // ---------------- reply with a message ----------------
+
+    private fun showReplies() {
+        val call = CallManager.ringingCall() ?: return
+        val replies = listOf(
+            getString(R.string.incall_reply_1), getString(R.string.incall_reply_2),
+            getString(R.string.incall_reply_3), getString(R.string.incall_reply_4),
+        )
+        val rows = replies.map { text -> text to { CallManager.rejectWithMessage(call, text) } } +
+            (getString(R.string.incall_reply_custom) to { writeReply(call) })
+        replyDialog = darkSheet(getString(R.string.incall_reply_title), rows.map { (label, action) ->
+            sheetRow(R.drawable.ic_message, label, false) {
+                replyDialog?.dismiss()
+                action()
+            }
+        })
+    }
+
+    private fun writeReply(call: Call) {
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            maxLines = 4
+            setPadding(dp(20), dp(12), dp(20), dp(12))
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.incall_reply_title)
+            .setView(FrameLayout(this).apply {
+                setPadding(dp(16), dp(8), dp(16), 0)
+                addView(input)
+            })
+            .setNegativeButton(R.string.ui_cancel, null)
+            .setPositiveButton(R.string.incall_reply_send) { _, _ ->
+                val text = input.text.toString().trim()
+                if (text.isNotEmpty() && CallManager.ringingCall() === call) CallManager.rejectWithMessage(call, text)
+            }
+            .show()
+        input.requestFocus()
+    }
+
     // ---------------- audio output (speaker / Bluetooth / phone) ----------------
 
     /** With a Bluetooth device around there are more than two places for the audio: then the button opens a picker. */
@@ -285,7 +414,7 @@ class InCallActivity : Activity() {
         val current = routes.firstOrNull { it.active }
         speakerBtn.setIcon(if (current == null) R.drawable.ic_volume_up else iconFor(current.kind))
         speakerBtn.setLabel(
-            (if (current == null) getString(R.string.incall_audio) else shortLabel(current.kind)) + " \u25BE"
+            (if (current == null) getString(R.string.incall_audio) else shortLabel(current.kind)) + " ▾"
         )
         speakerBtn.setActive(current != null && current.kind != CallManager.RouteKind.EARPIECE)
         if (routeDialog?.isShowing == true) fillRoutes()
@@ -315,17 +444,43 @@ class InCallActivity : Activity() {
     private fun showRoutes() {
         routeDialog?.dismiss()
         val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val d = darkSheet(getString(R.string.route_title), listOf(list))
+        d.setOnDismissListener {
+            if (routeDialog === d) {
+                routeDialog = null
+                routeList = null
+            }
+        }
+        routeDialog = d
+        routeList = list
+        fillRoutes()
+    }
+
+    /** (Re)builds the picker rows; called again when Telecom reports a change while it is open. */
+    private fun fillRoutes() {
+        val list = routeList ?: return
+        list.removeAllViews()
+        for (r in CallManager.routes()) {
+            list.addView(sheetRow(iconFor(r.kind), r.name ?: kindLabel(r.kind), r.active, if (r.name != null) kindLabel(r.kind) else null) {
+                CallManager.selectRoute(r)
+                routeDialog?.dismiss()
+            })
+        }
+    }
+
+    /** Dark bottom sheet of the call screen with a title and [rows]. */
+    private fun darkSheet(title: String, rows: List<View>): Dialog {
         val sheet = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = rounded(Palette.SHEET, dp(28).toFloat())
             setPadding(dp(8), dp(20), dp(8), dp(12))
             addView(TextView(this@InCallActivity).apply {
-                text = getString(R.string.route_title)
+                text = title
                 textSize = 15f
                 setTextColor(Palette.TEXT_DIM)
                 setPadding(dp(16), 0, dp(16), dp(10))
             })
-            addView(list)
+            rows.forEach { addView(it) }
         }
         val outer = FrameLayout(this).apply {
             setPadding(dp(12), 0, dp(12), dp(12))
@@ -339,26 +494,11 @@ class InCallActivity : Activity() {
             w.setGravity(Gravity.BOTTOM)
             w.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
-        d.setOnDismissListener {
-            if (routeDialog === d) {
-                routeDialog = null
-                routeList = null
-            }
-        }
-        routeDialog = d
-        routeList = list
-        fillRoutes()
         d.show()
+        return d
     }
 
-    /** (Re)builds the picker rows; called again when Telecom reports a change while it is open. */
-    private fun fillRoutes() {
-        val list = routeList ?: return
-        list.removeAllViews()
-        for (r in CallManager.routes()) list.addView(routeRow(r))
-    }
-
-    private fun routeRow(r: CallManager.AudioRoute): View {
+    private fun sheetRow(icon: Int, label: String, active: Boolean, sub: String? = null, onClick: () -> Unit): View {
         val radius = dp(16).toFloat()
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -367,17 +507,14 @@ class InCallActivity : Activity() {
             setPadding(dp(16), dp(8), dp(16), dp(8))
             background = RippleDrawable(
                 ColorStateList.valueOf(0x40FFFFFF),
-                if (r.active) rounded(0x1FFFFFFF, radius) else null,
+                if (active) rounded(0x1FFFFFFF, radius) else null,
                 rounded(Color.WHITE, radius) // ripple mask
             )
-            setOnClickListener {
-                CallManager.selectRoute(r)
-                routeDialog?.dismiss()
-            }
+            setOnClickListener { onClick() }
         }
-        val tint = if (r.active) Palette.ACCENT else Color.WHITE
+        val tint = if (active) Palette.ACCENT else Color.WHITE
         row.addView(ImageView(this).apply {
-            setImageResource(iconFor(r.kind))
+            setImageResource(icon)
             setColorFilter(tint)
         }, LinearLayout.LayoutParams(dp(24), dp(24)))
         val texts = LinearLayout(this).apply {
@@ -385,21 +522,21 @@ class InCallActivity : Activity() {
             setPadding(dp(18), 0, dp(8), 0)
         }
         texts.addView(TextView(this).apply {
-            text = r.name ?: kindLabel(r.kind)
+            text = label
             textSize = 17f
             setTextColor(tint)
-            maxLines = 1
+            maxLines = 3
             ellipsize = TextUtils.TruncateAt.END
         })
-        if (r.name != null) {
+        if (sub != null) {
             texts.addView(TextView(this).apply {
-                text = kindLabel(r.kind)
+                text = sub
                 textSize = 13f
                 setTextColor(Palette.TEXT_DIM)
             })
         }
         row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        if (r.active) {
+        if (active) {
             row.addView(ImageView(this).apply {
                 setImageResource(R.drawable.ic_check)
                 setColorFilter(Palette.ACCENT)
@@ -436,13 +573,26 @@ class InCallActivity : Activity() {
         textSize = sizeSp
         setTextColor(color)
         gravity = Gravity.CENTER
-        if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
+        if (bold) setTypeface(typeface, Typeface.BOLD)
         maxLines = 2
         ellipsize = TextUtils.TruncateAt.END
     }
 
     private fun lp(w: Int = ViewGroup.LayoutParams.MATCH_PARENT, h: Int = ViewGroup.LayoutParams.WRAP_CONTENT) =
         LinearLayout.LayoutParams(w, h)
+
+    private fun textButton(icon: Int, label: String, onClick: () -> Unit) = TextView(this).apply {
+        text = label
+        textSize = 15f
+        setTextColor(Color.WHITE)
+        gravity = Gravity.CENTER
+        setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
+        compoundDrawableTintList = ColorStateList.valueOf(Color.WHITE)
+        compoundDrawablePadding = dp(8)
+        setPadding(dp(18), dp(10), dp(18), dp(10))
+        background = RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), rounded(0x26FFFFFF, dp(22).toFloat()), null)
+        setOnClickListener { onClick() }
+    }
 
     private fun buildUi(): View {
         val root = LinearLayout(this).apply {
@@ -452,25 +602,42 @@ class InCallActivity : Activity() {
             padForSystemBars(dp(16))
         }
 
-        root.addView(View(this), lp(h = 0).apply { weight = 0.6f })
-
-        val avatar = ImageView(this).apply {
-            setImageResource(R.drawable.ic_person)
-            setColorFilter(android.graphics.Color.WHITE)
-            background = circle(Palette.TEAL)
-            val p = dp(22)
-            setPadding(p, p, p, p)
+        // The other call (on hold / in progress), with "Swap".
+        otherBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = rounded(0x26FFFFFF, dp(20).toFloat())
+            setPadding(dp(16), dp(6), dp(6), dp(6))
+            visibility = View.GONE
         }
+        otherBar.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_pause)
+            setColorFilter(Palette.TEXT_DIM)
+        }, LinearLayout.LayoutParams(dp(20), dp(20)).apply { marginEnd = dp(10) })
+        otherText = TextView(this).apply {
+            textSize = 15f
+            setTextColor(Color.WHITE)
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+        }
+        otherBar.addView(otherText, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        otherSwap = textButton(R.drawable.ic_swap_calls, getString(R.string.incall_swap)) { CallManager.swap() }
+        otherBar.addView(otherSwap)
+        root.addView(otherBar, lp().apply { leftMargin = dp(8); rightMargin = dp(8) })
+
+        root.addView(View(this), lp(h = 0).apply { weight = 0.5f })
+
+        avatar = AvatarView(this, 104)
         root.addView(avatar, LinearLayout.LayoutParams(dp(104), dp(104)))
 
-        nameView = text(30f, android.graphics.Color.WHITE, bold = true)
+        nameView = text(30f, Color.WHITE, bold = true)
         root.addView(nameView, lp().apply { topMargin = dp(20) })
-        numberView = text(18f, Palette.TEXT_DIM)
+        numberView = text(17f, Palette.TEXT_DIM)
         root.addView(numberView, lp().apply { topMargin = dp(4) })
-        statusView = text(17f, 0xFF80CBC4.toInt())
+        statusView = text(17f, Palette.ACCENT)
         root.addView(statusView, lp().apply { topMargin = dp(10) })
 
-        voiceView = text(15f, android.graphics.Color.WHITE).apply {
+        voiceView = text(15f, Color.WHITE).apply {
             background = rounded(0x26FFFFFF, dp(20).toFloat())
             setPadding(dp(16), dp(10), dp(16), dp(10))
             setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_stat_mic, 0, 0, 0)
@@ -486,29 +653,47 @@ class InCallActivity : Activity() {
         activePanel = buildActivePanel()
         root.addView(activePanel, lp())
 
-        ringingRow = buildRingingRow()
-        root.addView(ringingRow, lp())
+        ringingPanel = buildRingingPanel()
+        root.addView(ringingPanel, lp())
 
         return root
     }
 
-    private fun buildRingingRow(): View {
+    private fun buildRingingPanel(): View {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(0, 0, 0, dp(16))
+        }
+        waitingHint = text(14f, Palette.TEXT_DIM).apply { text = getString(R.string.incall_hold_hint) }
+        panel.addView(waitingHint, lp().apply { bottomMargin = dp(14) })
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dp(24))
         }
         val decline = RoundButton(this, R.drawable.ic_call_end, getString(R.string.incall_decline), 76, 34, Palette.RED)
         decline.onClick { CallManager.ringingCall()?.let { CallManager.reject(it) } }
         val answer = RoundButton(this, R.drawable.ic_call, getString(R.string.incall_answer), 76, 34, Palette.GREEN)
-        answer.onClick { CallManager.ringingCall()?.let { CallManager.answer(it) } }
+        answer.onClick {
+            if (CallManager.isCallWaiting()) CallManager.answerWaiting(endCurrent = false)
+            else CallManager.ringingCall()?.let { CallManager.answer(it) }
+        }
         row.addView(decline)
         row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
         row.addView(answer)
-        return FrameLayout(this).apply {
-            addView(row, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                .apply { leftMargin = dp(36); rightMargin = dp(36) })
+        panel.addView(row, lp().apply { leftMargin = dp(36); rightMargin = dp(36) })
+        val extras = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
         }
+        replyBtn = textButton(R.drawable.ic_message, getString(R.string.incall_message)) { showReplies() }
+        extras.addView(replyBtn, lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(18) })
+        endAndAnswerBtn = textButton(R.drawable.ic_call_end, getString(R.string.incall_end_and_answer)) {
+            CallManager.answerWaiting(endCurrent = true)
+        }
+        extras.addView(endAndAnswerBtn, lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
+        panel.addView(extras, lp())
+        return panel
     }
 
     private fun buildActivePanel(): View {
@@ -516,10 +701,6 @@ class InCallActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(0, 0, 0, dp(16))
-        }
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
         }
         muteBtn = RoundButton(this, R.drawable.ic_mic_off, getString(R.string.incall_mute), 64, 28, Palette.BUTTON)
         muteBtn.onClick { CallManager.setMuted(!CallManager.muted) }
@@ -532,15 +713,24 @@ class InCallActivity : Activity() {
         speakerBtn.onClick {
             if (hasRouteChoice()) showRoutes() else CallManager.setSpeaker(!CallManager.isSpeakerOn())
         }
+        addCallBtn = RoundButton(this, R.drawable.ic_add_call, getString(R.string.incall_add_call), 64, 28, Palette.BUTTON)
+        addCallBtn.onClick { addCall() }
         holdBtn = RoundButton(this, R.drawable.ic_pause, getString(R.string.incall_hold), 64, 28, Palette.BUTTON)
         holdBtn.onClick { CallManager.primaryCall()?.let { CallManager.toggleHold(it) } }
-        for (b in listOf(muteBtn, keypadBtn, speakerBtn, holdBtn)) {
-            row.addView(b, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        mergeBtn = RoundButton(this, R.drawable.ic_call_merge, getString(R.string.incall_merge), 64, 28, Palette.BUTTON)
+        mergeBtn.onClick { CallManager.foregroundCall()?.let { CallManager.merge(it) } }
+
+        for (buttons in listOf(listOf(muteBtn, keypadBtn, speakerBtn), listOf(addCallBtn, holdBtn, mergeBtn))) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+            }
+            for (b in buttons) row.addView(b, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            panel.addView(row, lp().apply { bottomMargin = dp(14) })
         }
-        panel.addView(row, lp())
         val end = RoundButton(this, R.drawable.ic_call_end, getString(R.string.incall_end), 76, 34, Palette.RED)
         end.onClick { CallManager.primaryCall()?.let { CallManager.hangup(it) } }
-        panel.addView(end, lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(28) })
+        panel.addView(end, lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
         return panel
     }
 
@@ -555,7 +745,7 @@ class InCallActivity : Activity() {
             val key = TextView(this).apply {
                 text = k
                 textSize = 26f
-                setTextColor(android.graphics.Color.WHITE)
+                setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
                 background = ripple(circle(Palette.BUTTON))
                 setOnTouchListener { v, ev ->

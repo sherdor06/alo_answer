@@ -13,8 +13,8 @@ import com.aloanswer.alo_answer.dialer.dp
 import java.util.Calendar
 
 /**
- * Last 20 events of the native log, newest first. Labels follow the current
- * language; the detail text is in the language that was on when it happened.
+ * Last 20 events of the native log, newest first, in the current language
+ * (only text that came straight from Android, such as an error, stays as it was).
  */
 class EventLogActivity : Screen() {
 
@@ -77,7 +77,7 @@ class EventLogActivity : Screen() {
 
     private fun row(e: Map<String, Any>): View {
         val type = e["type"] as? String ?: "?"
-        val msg = e["msg"] as? String ?: ""
+        val msg = EventLog.message(this, e)
         val bad = type in setOf("answer_failed", "speaker_failed", "mic_blocked", "error")
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -88,8 +88,11 @@ class EventLogActivity : Screen() {
             setColorFilter(if (bad) c.error else c.primary)
         }, LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginEnd = dp(16); topMargin = dp(2) })
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        texts.addView(text(label(type), 15.5f))
-        if (msg.isNotEmpty()) texts.addView(text(msg, 13.5f, c.dim), matchWrap().apply { topMargin = dp(2) })
+        val title = label(type)
+        texts.addView(text(title, 15.5f))
+        if (msg.isNotEmpty() && !msg.equals(title, ignoreCase = true)) {
+            texts.addView(text(msg, 13.5f, c.dim), matchWrap().apply { topMargin = dp(2) })
+        }
         row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         row.addView(text(time((e["ts"] as? Number)?.toLong() ?: 0L), 12f, c.dim).apply {
             gravity = Gravity.END

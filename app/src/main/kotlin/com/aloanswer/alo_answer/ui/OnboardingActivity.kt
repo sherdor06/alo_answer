@@ -62,8 +62,9 @@ class OnboardingActivity : Screen() {
     private fun render() {
         content.removeAllViews()
         content.addView(text(getString(R.string.ui_onboarding_intro), 16f), matchWrap().apply { bottomMargin = dp(16) })
-        for (p in perms) permCard(p)
-        val all = perms.all { status[it.name] == PermissionHelper.GRANTED }
+        val required = PermissionHelper.required(this)
+        for (p in perms) permCard(p, needed = p.name in required)
+        val all = required.all { status[it] == PermissionHelper.GRANTED }
         content.addView(
             button(getString(if (all) R.string.ui_continue_btn else R.string.ui_allow_all_to_continue), Btn.FILLED) {
                 done()
@@ -72,9 +73,16 @@ class OnboardingActivity : Screen() {
         )
     }
 
-    private fun permCard(p: Perm) {
+    private fun permCard(p: Perm, needed: Boolean) {
         val st = status[p.name]
         val granted = st == PermissionHelper.GRANTED
+        if (!needed && !granted) {
+            // Default phone app: our call screen starts listening itself, so this one isn't needed.
+            val v = card()
+            v.addView(iconRow(p.icon, c.dim, getString(p.title), c.dim, 24))
+            v.addView(text(getString(R.string.ui_perm_not_needed_dialer), 14f, c.dim), matchWrap().apply { topMargin = dp(6) })
+            return
+        }
         val permanent = st == PermissionHelper.PERMANENTLY_DENIED
         val v = card()
         val head = LinearLayout(this).apply {

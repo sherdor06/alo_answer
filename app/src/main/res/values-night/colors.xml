@@ -14,4 +14,9 @@
     <color name="app_outline">#3F4947</color>
     <color name="app_neutral_container">#2A3432</color>
     <color name="app_hit">#3DBE63</color>
+    <!-- Phone app (dial pad, lists) -->
+    <color name="app_key">#25302E</color>
+    <color name="app_missed">#FF8A80</color>
+    <color name="app_nav">#161E1C</color>
+    <color name="app_divider">#2C3634</color>
 </resources>

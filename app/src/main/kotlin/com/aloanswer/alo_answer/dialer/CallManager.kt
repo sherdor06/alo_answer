@@ -46,8 +46,10 @@ object CallManager {
     private val main = Handler(Looper.getMainLooper())
     private val lookups = Executors.newSingleThreadExecutor()
 
-    /** Contact names found for numbers of current calls (number → name). */
+    /** Contact names and photos found for numbers of current calls (number → value). */
     private val names = ConcurrentHashMap<String, String>()
+    private val photos = ConcurrentHashMap<String, String>()
+    private val looked = ConcurrentHashMap.newKeySet<String>()
 
     /** Calls currently known to Telecom (main thread only). */
     val calls = mutableListOf<Call>()
@@ -88,6 +90,9 @@ object CallManager {
     private val callback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) = changed()
         override fun onDetailsChanged(call: Call, details: Call.Details) = changed()
+        override fun onParentChanged(call: Call, parent: Call?) = changed()
+        override fun onChildrenChanged(call: Call, children: MutableList<Call>) = changed()
+        override fun onConferenceableCallsChanged(call: Call, conferenceableCalls: MutableList<Call>) = changed()
     }
 
     fun onCallAdded(call: Call) {
@@ -96,17 +101,21 @@ object CallManager {
         changed()
     }
 
-    /** Look the caller up in contacts (off the main thread) so the call screen and notification show a name. */
+    /** Look the caller up in contacts (off the main thread): name and photo for the call screen and notification. */
     fun resolveName(ctx: Context, call: Call) {
         val n = number(call) ?: return
-        if (names.containsKey(n) || (displayName(call) ?: n) != n) return
+        if (!looked.add(n)) return
         val app = ctx.applicationContext
         lookups.execute {
-            val name = ContactsRepo.nameFor(app, n) ?: return@execute
-            names[n] = name
+            val info = ContactsRepo.lookup(app, n) ?: return@execute
+            names[n] = info.name
+            info.photoUri?.let { photos[n] = it }
             main.post { changed() }
         }
     }
+
+    /** Small contact photo of the caller, if the contact has one. */
+    fun photoUri(call: Call): String? = number(call)?.let { photos[it] }
 
     fun onCallRemoved(call: Call) {
         call.unregisterCallback(callback)
@@ -115,6 +124,8 @@ object CallManager {
             muted = false
             speakerOn = false
             names.clear()
+            photos.clear()
+            looked.clear()
             audioState = null
             endpoints = emptyList()
             currentEndpoint = null
@@ -132,13 +143,37 @@ object CallManager {
 
     fun hasRingingCall() = ringingCall() != null
 
+    private val TALKING = setOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_SELECT_PHONE_ACCOUNT)
+
     /** The call the UI should show: a ringing one first, then an active/dialing one, then anything. */
     fun primaryCall(): Call? {
         ringingCall()?.let { return it }
-        val live = setOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_SELECT_PHONE_ACCOUNT)
-        return calls.firstOrNull { stateOf(it) in live }
+        return foregroundCall()
+            ?: topLevel().firstOrNull { stateOf(it) != Call.STATE_DISCONNECTED }
             ?: calls.firstOrNull { stateOf(it) != Call.STATE_DISCONNECTED }
     }
+
+    /** Calls that aren't part of a conference (a conference counts as one call). */
+    private fun topLevel() = calls.filter { it.parent == null }
+
+    /** Calls still going on (ringing, dialing, active or on hold). */
+    fun liveCalls(): List<Call> = topLevel().filter {
+        val s = stateOf(it)
+        s != Call.STATE_DISCONNECTED && s != Call.STATE_DISCONNECTING
+    }
+
+    /** The call being talked on (or dialed), not a ringing or held one. */
+    fun foregroundCall(): Call? = topLevel().firstOrNull { stateOf(it) in TALKING }
+
+    fun heldCall(): Call? = topLevel().firstOrNull { stateOf(it) == Call.STATE_HOLDING }
+
+    /** A second call rings while another one is going on (call waiting). */
+    fun isCallWaiting(): Boolean {
+        val r = ringingCall() ?: return false
+        return liveCalls().any { it != r }
+    }
+
+    fun isConference(call: Call) = call.details.hasProperty(Call.Details.PROPERTY_CONFERENCE)
 
     fun number(call: Call): String? {
         val handle: Uri = call.details.handle ?: return null
@@ -168,6 +203,42 @@ object CallManager {
     }
 
     fun hangup(call: Call) = call.disconnect()
+
+    /**
+     * Call waiting: answer the new call. Telecom puts the current call on hold by itself;
+     * with [endCurrent] the current call is hung up first.
+     */
+    fun answerWaiting(endCurrent: Boolean) {
+        val ringing = ringingCall() ?: return
+        if (endCurrent) liveCalls().filter { it != ringing }.forEach { it.disconnect() }
+        answer(ringing)
+    }
+
+    /** Decline a ringing call with a text message (Telecom sends the SMS). */
+    fun rejectWithMessage(call: Call, text: String) = call.reject(true, text)
+
+    fun canReplyWithMessage(call: Call) = call.details.can(Call.Details.CAPABILITY_RESPOND_VIA_TEXT)
+
+    /** Two calls: go to the held one (Telecom holds the current one). */
+    fun swap() {
+        val held = heldCall() ?: return
+        val fg = foregroundCall()
+        if (fg != null && fg.details.can(Call.Details.CAPABILITY_SWAP_CONFERENCE)) fg.swapConference() else held.unhold()
+    }
+
+    fun canMerge(call: Call) =
+        call.conferenceableCalls.isNotEmpty() || call.details.can(Call.Details.CAPABILITY_MERGE_CONFERENCE)
+
+    /** Join the current and the held call into a conference. */
+    fun merge(call: Call) {
+        val other = call.conferenceableCalls.firstOrNull()
+        when {
+            other != null -> call.conference(other)
+            call.details.can(Call.Details.CAPABILITY_MERGE_CONFERENCE) -> call.mergeConference()
+        }
+    }
+
+    fun canHold(call: Call) = call.details.can(Call.Details.CAPABILITY_HOLD)
 
     fun toggleHold(call: Call) {
         if (stateOf(call) == Call.STATE_HOLDING) call.unhold() else call.hold()

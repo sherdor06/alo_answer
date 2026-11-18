@@ -10,4 +10,14 @@
             android:targetPackage="com.aloanswer.alo_answer"
             android:targetClass="com.aloanswer.alo_answer.dialer.DialerActivity" />
     </shortcut>
+    <shortcut
+        android:shortcutId="settings"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_settings"
+        android:shortcutShortLabel="@string/dialer_settings">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.aloanswer.alo_answer"
+            android:targetClass="com.aloanswer.alo_answer.MainActivity" />
+    </shortcut>
 </shortcuts>

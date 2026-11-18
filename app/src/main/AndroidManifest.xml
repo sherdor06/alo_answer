@@ -20,15 +20,22 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- Phone app tabs: Recents (call history) and Contacts; caller names -->
+    <!-- Phone app tabs: Recents (call history) and Contacts; caller names.
+         WRITE_CALL_LOG only to delete calls from the history (asked when you delete). -->
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
+    <!-- localeConfig: the app's languages for Android 13+ per-app language (in-app picker
+         and the phone's Settings → Apps → Alo Answer → Language). -->
     <application
+        android:name=".App"
         android:label="Alo Answer"
         android:icon="@mipmap/ic_launcher"
+        android:localeConfig="@xml/locale_config"
         android:theme="@style/AppTheme">
-        <!-- Home screen (native views, see ui/Screen.kt) -->
+        <!-- Settings / home (native views, see ui/Screen.kt). As the default phone app the
+             app icon goes on to the dial pad. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -38,7 +45,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Long-press the app icon: "Dial" -->
+            <!-- Long-press the app icon: "Dial", "Settings" -->
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
@@ -56,10 +63,16 @@
             android:exported="true"
             android:label="@string/app_title"
             android:launchMode="singleTask"
-            android:theme="@style/CallTheme">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- "Show call history" from other apps and the system -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.dir/calls" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />
@@ -101,6 +114,16 @@
         <receiver
             android:name=".dialer.CallActionReceiver"
             android:exported="false" />
+
+        <!-- Telecom asks the default phone app to show the missed-call notification
+             (it shows its own only when no app handles this). Sent by the system. -->
+        <receiver
+            android:name=".dialer.MissedCallReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.action.SHOW_MISSED_CALLS_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
 
         <!-- ACTION_PHONE_STATE_CHANGED is on the implicit-broadcast exception list,
              so a manifest receiver still gets it on API 26+. Exported because the

@@ -1,11 +1,11 @@
 package com.aloanswer.alo_answer.ui
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
@@ -41,6 +41,13 @@ class AppColors(ctx: Context) {
     val outline = ctx.getColor(R.color.app_outline)
     val neutralContainer = ctx.getColor(R.color.app_neutral_container)
     val hit = ctx.getColor(R.color.app_hit)
+    /** Dial pad keys. */
+    val key = ctx.getColor(R.color.app_key)
+    /** Missed / declined calls. */
+    val missed = ctx.getColor(R.color.app_missed)
+    /** Bottom navigation bar of the phone app. */
+    val nav = ctx.getColor(R.color.app_nav)
+    val divider = ctx.getColor(R.color.app_divider)
 }
 
 enum class Btn { FILLED, TONAL, OUTLINED, TEXT }
@@ -127,31 +134,9 @@ abstract class Screen : Activity() {
     protected fun addAction(icon: Int, description: String, onClick: () -> Unit): ImageView =
         iconButton(icon, description, onClick).also { actions.addView(it) }
 
-    /** Top-bar action: switch between Oʻzbekcha / Русский / English. Stored natively, so calls use it too. */
-    protected fun addLanguageAction() = addAction(R.drawable.ic_translate, getString(R.string.ui_language)) {
-        val codes = arrayOf("uz", "ru", "en")
-        val names = arrayOf(
-            getString(R.string.ui_lang_uz), getString(R.string.ui_lang_ru), getString(R.string.ui_lang_en)
-        )
-        val current = Settings.language(this).ifEmpty {
-            when (resources.configuration.locales[0].language) {
-                "uz" -> "uz"
-                "ru" -> "ru"
-                else -> "en"
-            }
-        }
-        AlertDialog.Builder(this)
-            .setTitle(R.string.ui_language)
-            .setSingleChoiceItems(names, codes.indexOf(current)) { d, which ->
-                d.dismiss()
-                if (codes[which] != Settings.language(this)) {
-                    Settings.save(this, mapOf(Settings.KEY_LANGUAGE to codes[which]))
-                    recreate()
-                }
-            }
-            .setNegativeButton(R.string.ui_cancel, null)
-            .show()
-    }
+    /** Top-bar action: the app language (one setting for every screen, the call screen and notifications). */
+    protected fun addLanguageAction() =
+        addAction(R.drawable.ic_translate, getString(R.string.ui_language)) { LanguagePicker.show(this) }
 
     // ---------------- building blocks ----------------
 
@@ -257,6 +242,85 @@ abstract class Screen : Activity() {
 
     protected fun gap(dpValue: Int, parent: LinearLayout = content) =
         parent.addView(View(this), LinearLayout.LayoutParams(1, dp(dpValue)))
+
+    // ---------------- settings lists ----------------
+
+    /** Card of tappable rows, with an optional small title. Returns the column to add rows to. */
+    protected fun listCard(title: String? = null, parent: LinearLayout = content): LinearLayout {
+        val v = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = rounded(c.card, dp(20).toFloat())
+            clipToOutline = true // ripples stay inside the rounded corners
+            setPadding(0, dp(if (title == null) 6 else 16), 0, dp(6))
+        }
+        if (title != null) {
+            v.addView(text(title, 14f, c.primary, medium = true).apply { setPadding(dp(20), 0, dp(20), dp(4)) })
+        }
+        parent.addView(v, matchWrap().apply { bottomMargin = dp(12) })
+        return v
+    }
+
+    /**
+     * Settings row: icon, title, optional subtitle, optional value on the right and a
+     * chevron when it opens something.
+     */
+    protected fun listRow(
+        parent: LinearLayout,
+        icon: Int,
+        title: String,
+        subtitle: String? = null,
+        value: String? = null,
+        tint: Int = c.primary,
+        onClick: (() -> Unit)? = null,
+    ): LinearLayout {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            minimumHeight = dp(60)
+            setPadding(dp(20), dp(10), dp(14), dp(10))
+            if (onClick != null) {
+                background = RippleDrawable(ColorStateList.valueOf(0x22808080), null, ColorDrawable(Color.WHITE))
+                setOnClickListener { onClick() }
+            }
+        }
+        row.addView(ImageView(this).apply {
+            setImageResource(icon)
+            setColorFilter(tint)
+        }, LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginEnd = dp(18) })
+        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        texts.addView(text(title, 16f))
+        if (!subtitle.isNullOrEmpty()) texts.addView(text(subtitle, 13.5f, c.dim), matchWrap().apply { topMargin = dp(2) })
+        row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        if (!value.isNullOrEmpty()) {
+            row.addView(text(value, 14f, c.dim).apply {
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
+                gravity = Gravity.END
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                .apply { marginStart = dp(12) })
+        }
+        if (onClick != null) {
+            row.addView(ImageView(this).apply {
+                setImageResource(R.drawable.ic_chevron_right)
+                setColorFilter(c.dim)
+            }, LinearLayout.LayoutParams(dp(20), dp(20)).apply { marginStart = dp(6) })
+        }
+        parent.addView(row, matchWrap())
+        return row
+    }
+
+    /** Thin line between rows of a [listCard], indented to the row text. */
+    protected fun rowDivider(parent: LinearLayout) = parent.addView(
+        View(this).apply { setBackgroundColor(c.divider) },
+        LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1)).apply { marginStart = dp(62) }
+    )
+
+    /** "2.1.0" */
+    protected fun versionName(): String = try {
+        packageManager.getPackageInfo(packageName, 0).versionName ?: ""
+    } catch (_: Exception) {
+        ""
+    }
 
     protected fun two(n: Int) = String.format(Locale.US, "%02d", n)
 }

@@ -121,8 +121,8 @@
     <string name="ui_blocker_perms">allow all permissions</string>
     <string name="ui_cancel">Cancel</string>
     <string name="ui_check_battery">Battery optimization off (as Android reports it)</string>
-    <string name="ui_check_model_asset">Uzbek speech model in the app (assets/model-uz)</string>
-    <string name="ui_check_model_ready">Model ready on this phone (offline, no key needed)</string>
+    <string name="ui_check_model_asset">Uzbek speech model included</string>
+    <string name="ui_check_model_ready">Model ready on this phone (works offline)</string>
     <string name="ui_clear">Clear</string>
     <string name="ui_clear_log_q">Clear the event log?</string>
     <string name="ui_continue_btn">Continue</string>
@@ -197,7 +197,7 @@
     <string name="ui_speaker_none_head">No call answered yet</string>
     <string name="ui_speaker_ok_body">This only means Android accepted the request. An app that is not your phone app cannot reliably control the call\'s audio, so check by ear whether the last call really came out of the loudspeaker.</string>
     <string name="ui_speaker_ok_head">Android says the speaker was selected</string>
-    <string name="ui_speaker_title">Loudspeaker (best effort)</string>
+    <string name="ui_speaker_title">Last voice answer</string>
     <string name="ui_start_again">Start again</string>
     <string name="ui_starting">Starting…</string>
     <string name="ui_step_autostart_btn">Open Autostart</string>
@@ -235,4 +235,94 @@
     <string name="ui_lang_uz" translatable="false">Oʻzbekcha</string>
     <string name="ui_lang_ru" translatable="false">Русский</string>
     <string name="ui_lang_en" translatable="false">English</string>
+
+    <!-- ===== 2.1: one app language, phone app features, call screen ===== -->
+    <string name="ui_lang_system">Phone language</string>
+    <string name="ui_lang_system_named">Phone language (%1$s)</string>
+    <string name="ui_voice_title">Voice answer</string>
+    <string name="ui_sensitivity_title">Sensitivity</string>
+    <string name="ui_level_very_low">Very low</string>
+    <string name="ui_level_low">Low</string>
+    <string name="ui_level_medium">Medium</string>
+    <string name="ui_level_high">High</string>
+    <string name="ui_level_very_high">Very high</string>
+    <string name="ui_sens_low_hint">Fewer mistakes</string>
+    <string name="ui_sens_high_hint">Hears more easily</string>
+    <string name="ui_test_listening_sub">Check how well it hears “alo”</string>
+    <string name="ui_dialer_on_short">Alo Answer is your phone app</string>
+    <string name="ui_dialer_off_short">Make Alo Answer your phone app: voice answer works most reliably and the speaker turns on by itself. You can switch back any time in the phone’s settings.</string>
+    <string name="ui_open_dialer_sub">Recents, contacts and keypad</string>
+    <string name="ui_call_settings">Call settings</string>
+    <string name="ui_call_settings_sub">Call forwarding, call waiting, caller ID</string>
+    <string name="ui_sim_accounts">SIM cards</string>
+    <string name="ui_sim_accounts_sub">Which SIM calls go out on</string>
+    <string name="ui_blocked_numbers">Blocked numbers</string>
+    <string name="ui_blocked_numbers_sub">Calls and messages from them don’t reach you</string>
+    <string name="ui_general">General</string>
+    <string name="ui_xiaomi_setup_sub">So the phone doesn’t stop the app</string>
+    <string name="ui_perms_all_ok">All allowed</string>
+    <string name="ui_event_log_sub">What happened during recent calls</string>
+    <string name="ui_perm_not_needed_dialer">Not needed: Alo Answer is your phone app, so its own call screen starts listening.</string>
+    <string name="dialer_more">More options</string>
+    <string name="dialer_delete">Delete</string>
+    <string name="dialer_copied">Number copied</string>
+    <string name="dialer_cant_open">Couldn’t open this on your phone.</string>
+    <string name="dialer_sms">Message</string>
+    <string name="dialer_add_contact">Add to contacts</string>
+    <string name="dialer_send_sms">Send a message</string>
+    <string name="dialer_copy">Copy number</string>
+    <string name="dialer_copy_short">Copy</string>
+    <string name="dialer_paste">Paste</string>
+    <string name="dialer_edit_short">Edit</string>
+    <string name="dialer_open_contact">Open contact</string>
+    <string name="dialer_new_contact">New contact</string>
+    <string name="dialer_block">Block number</string>
+    <string name="dialer_unblock">Unblock number</string>
+    <string name="dialer_blocked_toast">Number blocked</string>
+    <string name="dialer_unblocked_toast">Number unblocked</string>
+    <string name="dialer_delete_history">Delete from call history</string>
+    <string name="dialer_clear_history">Clear call history</string>
+    <string name="dialer_clear_history_q">Delete the whole call history?</string>
+    <string name="dialer_need_write_call_log">Allow changes to the call history to delete calls.</string>
+    <string name="dialer_filter_all">All</string>
+    <string name="dialer_filter_missed">Missed</string>
+    <string name="recents_empty_missed">No missed calls</string>
+    <string name="contacts_no_match">Nothing found</string>
+    <string name="dialer_call_history">Call history</string>
+    <string name="dialer_voicemail">Voicemail</string>
+    <string name="dialer_private_number">Private number</string>
+    <string name="dialer_favourites">Favourites</string>
+    <string name="dialer_details">Details</string>
+    <string name="calltype_blocked">Blocked</string>
+    <string name="notif_missed_channel">Missed calls</string>
+    <string name="notif_missed_title">Missed call</string>
+    <string name="notif_missed_last">Latest: %1$s</string>
+    <string name="notif_call_back">Call back</string>
+    <string name="incall_add_call">Add call</string>
+    <string name="incall_merge">Merge</string>
+    <string name="incall_swap">Swap</string>
+    <string name="incall_on_hold_name">On hold: %1$s</string>
+    <string name="incall_current_name">Current call: %1$s</string>
+    <string name="incall_hold_hint">The current call will be put on hold</string>
+    <string name="incall_end_and_answer">End current call and answer</string>
+    <string name="incall_message">Message</string>
+    <string name="incall_reply_title">Reply with a message</string>
+    <string name="incall_reply_custom">Write your own…</string>
+    <string name="incall_reply_send">Send</string>
+    <string name="incall_reply_1">Can’t talk now. I’ll call you back.</string>
+    <string name="incall_reply_2">I’m on my way. I’ll call you later.</string>
+    <string name="incall_reply_3">I’m in a meeting. I’ll text you.</string>
+    <string name="incall_reply_4">Please send me a message.</string>
+    <string name="incall_conference">Conference call</string>
+    <string name="ev_speaker_kept_bluetooth">The call stayed on the Bluetooth device, so the speaker was left off</string>
+    <string name="ev_speaker_kept_wired">The call stayed on the wired headset, so the speaker was left off</string>
+    <plurals name="ui_perms_missing_n">
+        <item quantity="one">%d missing</item>
+        <item quantity="other">%d missing</item>
+    </plurals>
+    <plurals name="notif_missed_title_n">
+        <item quantity="one">%d missed call</item>
+        <item quantity="other">%d missed calls</item>
+    </plurals>
+    <string name="ev_debug_fake_detector" translatable="false">[DEBUG: simulated detector, mic not opened]</string>
 </resources>

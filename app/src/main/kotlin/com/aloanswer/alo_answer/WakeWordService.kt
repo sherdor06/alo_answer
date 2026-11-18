@@ -98,8 +98,11 @@ class WakeWordService : Service() {
     /** Localized text in the in-app language (works with no screen open). */
     private fun str(id: Int, vararg args: Any) = Settings.str(this, id, *args)
 
+    /** An event-log message, stored so the log shows it in the language the app uses later. */
+    private fun m(id: Int, vararg args: Any) = EventLog.Msg(id, *args)
+
     private val timeout = Runnable {
-        EventLog.add(this, EventLog.TIMEOUT, str(R.string.ev_timeout), persist = mode == Mode.ARM)
+        EventLog.add(this, EventLog.TIMEOUT, m(R.string.ev_timeout), persist = mode == Mode.ARM)
         shutdown()
     }
 
@@ -113,7 +116,7 @@ class WakeWordService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action
         if (action == ACTION_STOP) {
-            EventLog.add(this, EventLog.STOPPED, str(R.string.ev_stopped), persist = mode == Mode.ARM)
+            EventLog.add(this, EventLog.STOPPED, m(R.string.ev_stopped), persist = mode == Mode.ARM)
             shutdown()
             return START_NOT_STICKY
         }
@@ -132,7 +135,7 @@ class WakeWordService : Service() {
         if (!inForeground) return START_NOT_STICKY
 
         if (newMode == Mode.ARM && !ringingNow()) {
-            EventLog.add(this, EventLog.STOPPED, str(R.string.ev_not_ringing))
+            EventLog.add(this, EventLog.STOPPED, m(R.string.ev_not_ringing))
             shutdown()
             return START_NOT_STICKY
         }
@@ -192,7 +195,7 @@ class WakeWordService : Service() {
         } catch (e: Exception) {
             // SecurityException (while-in-use mic restriction) or
             // ForegroundServiceStartNotAllowedException (API 31+, an IllegalStateException).
-            fail(EventLog.MIC_BLOCKED, "${e.javaClass.simpleName}: ${e.message}", forMode == Mode.ARM)
+            failRaw(EventLog.MIC_BLOCKED, "${e.javaClass.simpleName}: ${e.message}", forMode == Mode.ARM)
             stopSelf()
             false
         }
@@ -207,10 +210,10 @@ class WakeWordService : Service() {
             return
         }
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            fail(EventLog.ERROR, str(R.string.ev_no_mic_perm)); shutdown(); return
+            fail(EventLog.ERROR, m(R.string.ev_no_mic_perm)); shutdown(); return
         }
         if (!ModelStore.assetPresent(this)) {
-            fail(EventLog.ERROR, str(R.string.ev_missing_model, ModelStore.ASSET_DIR)); shutdown(); return
+            fail(EventLog.ERROR, m(R.string.ev_missing_model, ModelStore.ASSET_DIR)); shutdown(); return
         }
         val sensitivity = Settings.sensitivity(this)
         val gen = ++generation
@@ -231,7 +234,7 @@ class WakeWordService : Service() {
                     }
                     if (!speech.startListening(listener(gen, matcher))) {
                         onWorker { s.release() }
-                        fail(EventLog.ERROR, str(R.string.ev_detector_init, "startListening() returned false"))
+                        fail(EventLog.ERROR, m(R.string.ev_detector_init, "startListening() returned false"))
                         shutdown()
                         return@post
                     }
@@ -243,7 +246,7 @@ class WakeWordService : Service() {
                 handler.post {
                     initializing = false
                     if (gen == generation) {
-                        fail(EventLog.ERROR, str(R.string.ev_detector_init, "${e.javaClass.simpleName}: ${e.message}"))
+                        fail(EventLog.ERROR, m(R.string.ev_detector_init, "${e.javaClass.simpleName}: ${e.message}"))
                         shutdown()
                     }
                 }
@@ -267,7 +270,7 @@ class WakeWordService : Service() {
 
         override fun onError(exception: Exception?) {
             if (gen != generation) return
-            fail(EventLog.ERROR, str(R.string.ev_detector_error, "${exception?.javaClass?.simpleName}: ${exception?.message}"))
+            fail(EventLog.ERROR, m(R.string.ev_detector_error, "${exception?.javaClass?.simpleName}: ${exception?.message}"))
             shutdown()
         }
 
@@ -276,22 +279,22 @@ class WakeWordService : Service() {
 
     private fun logListening() {
         val arm = mode == Mode.ARM
-        val what = str(if (arm) R.string.ev_listening_call else R.string.ev_listening_test)
-        EventLog.add(
-            this, EventLog.LISTENING,
-            if (fakeDetector) "$what [DEBUG: simulated detector, mic not opened]" else what,
-            persist = arm
-        )
+        val what = m(if (arm) R.string.ev_listening_call else R.string.ev_listening_test)
+        if (fakeDetector) {
+            EventLog.add(this, EventLog.LISTENING, what, m(R.string.ev_debug_fake_detector), persist = arm)
+        } else {
+            EventLog.add(this, EventLog.LISTENING, what, persist = arm)
+        }
     }
 
     private fun onWakeWord() {
         when (mode) {
-            Mode.TEST -> EventLog.add(this, EventLog.TEST_HIT, str(R.string.ev_wake_test), persist = false)
+            Mode.TEST -> EventLog.add(this, EventLog.TEST_HIT, m(R.string.ev_wake_test), persist = false)
             Mode.ARM -> {
                 if (answering) return
                 answering = true
                 handler.removeCallbacks(timeout)
-                EventLog.add(this, EventLog.WAKE, str(R.string.ev_wake))
+                EventLog.add(this, EventLog.WAKE, m(R.string.ev_wake))
                 // Free the mic first, then answer.
                 val s = session
                 session = null
@@ -310,12 +313,12 @@ class WakeWordService : Service() {
         // Default phone app: answer through Telecom's Call object and route the audio ourselves.
         CallManager.ringingCall()?.let { call ->
             CallManager.answer(call)
-            EventLog.add(this, EventLog.ANSWER_REQUESTED, str(R.string.ev_answer_dialer))
+            EventLog.add(this, EventLog.ANSWER_REQUESTED, m(R.string.ev_answer_dialer))
             handler.postDelayed({ speakerViaDialer() }, SPEAKER_DELAY_MS)
             return
         }
         if (checkSelfPermission(Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
-            fail(EventLog.ANSWER_FAILED, str(R.string.ev_answer_no_perm))
+            fail(EventLog.ANSWER_FAILED, m(R.string.ev_answer_no_perm))
             shutdown()
             return
         }
@@ -323,9 +326,9 @@ class WakeWordService : Service() {
             val tm = getSystemService(TelecomManager::class.java)
             @Suppress("DEPRECATION") // deprecated in API 29; no replacement for non-dialer apps
             tm.acceptRingingCall()
-            EventLog.add(this, EventLog.ANSWER_REQUESTED, str(R.string.ev_answer_requested))
+            EventLog.add(this, EventLog.ANSWER_REQUESTED, m(R.string.ev_answer_requested))
         } catch (e: Exception) {
-            fail(EventLog.ANSWER_FAILED, "${e.javaClass.simpleName}: ${e.message}")
+            failRaw(EventLog.ANSWER_FAILED, "${e.javaClass.simpleName}: ${e.message}")
             shutdown()
             return
         }
@@ -342,7 +345,7 @@ class WakeWordService : Service() {
         if (mode != Mode.ARM) return // call already over
         val clicker = SpeakerClickService.instance
         if (clicker == null) {
-            speakerViaAudioManager(str(R.string.ev_speaker_no_a11y))
+            speakerViaAudioManager(m(R.string.ev_speaker_no_a11y))
             return
         }
         try {
@@ -353,9 +356,9 @@ class WakeWordService : Service() {
         clicker.pressSpeaker(SPEAKER_CLICK_TIMEOUT_MS) { r ->
             if (destroyed) return@pressSpeaker
             if (r.ok) {
-                speakerResult("CLICKED_OK: ", true, str(R.string.ev_speaker_clicked, r.detail))
+                speakerResult("CLICKED_OK: ", true, m(R.string.ev_speaker_clicked, r.detail))
             } else {
-                speakerViaAudioManager(str(R.string.ev_speaker_click_failed, r.detail))
+                speakerViaAudioManager(m(R.string.ev_speaker_click_failed, r.detail))
             }
         }
     }
@@ -368,12 +371,12 @@ class WakeWordService : Service() {
     private fun speakerViaDialer(waitForHeadset: Boolean = true) {
         if (mode != Mode.ARM) return
         CallManager.headsetRoute()?.let { r ->
-            val name = r.name ?: str(
-                if (r.kind == CallManager.RouteKind.BLUETOOTH) R.string.route_bluetooth else R.string.route_wired
+            val msg = r.name?.let { m(R.string.ev_speaker_kept, it) } ?: m(
+                if (r.kind == CallManager.RouteKind.BLUETOOTH) R.string.ev_speaker_kept_bluetooth
+                else R.string.ev_speaker_kept_wired
             )
-            val text = str(R.string.ev_speaker_kept, name)
-            Settings.setLastSpeakerResult(this, "KEPT: $text")
-            EventLog.add(this, EventLog.SPEAKER_KEPT, text)
+            Settings.setLastSpeakerResult(this, "KEPT: " + Settings.str(this, msg.res, *msg.args))
+            EventLog.add(this, EventLog.SPEAKER_KEPT, msg)
             shutdown()
             return
         }
@@ -388,26 +391,26 @@ class WakeWordService : Service() {
             val detail = "${CallManager.describeRoute()}; ${SpeakerRouter.describe(this)}"
             speakerResult(
                 if (ok) "DIALER_OK: " else "FAILED: ", ok,
-                str(if (ok) R.string.ev_speaker_dialer else R.string.ev_speaker_dialer_failed, detail)
+                m(if (ok) R.string.ev_speaker_dialer else R.string.ev_speaker_dialer_failed, detail)
             )
         }, SPEAKER_VERIFY_DELAY_MS)
     }
 
-    private fun speakerViaAudioManager(prefix: String) {
+    private fun speakerViaAudioManager(prefix: EventLog.Msg) {
         val attempt = SpeakerRouter.attempt(this)
         handler.postDelayed({
             val (ok, detail) = SpeakerRouter.verify(this)
             val text = "$attempt → $detail"
             speakerResult(
                 if (ok) "REPORTED_OK: " else "FAILED: ", ok,
-                "$prefix " + str(if (ok) R.string.ev_speaker_ok else R.string.ev_speaker_failed, text)
+                prefix, m(if (ok) R.string.ev_speaker_ok else R.string.ev_speaker_failed, text)
             )
         }, SPEAKER_VERIFY_DELAY_MS)
     }
 
-    private fun speakerResult(prefix: String, ok: Boolean, text: String) {
-        Settings.setLastSpeakerResult(this, prefix + text)
-        EventLog.add(this, if (ok) EventLog.SPEAKER_OK else EventLog.SPEAKER_FAILED, text)
+    private fun speakerResult(prefix: String, ok: Boolean, vararg parts: EventLog.Msg) {
+        Settings.setLastSpeakerResult(this, prefix + parts.joinToString(" ") { Settings.str(this, it.res, *it.args) })
+        EventLog.add(this, if (ok) EventLog.SPEAKER_OK else EventLog.SPEAKER_FAILED, *parts)
         shutdown()
     }
 
@@ -429,7 +432,7 @@ class WakeWordService : Service() {
             if (answering && state == TelephonyManager.EXTRA_STATE_OFFHOOK) {
                 return@post // expected after acceptRingingCall(); the speaker step calls shutdown()
             }
-            EventLog.add(this, EventLog.STOPPED, str(R.string.ev_call_state, state))
+            EventLog.add(this, EventLog.STOPPED, m(R.string.ev_call_state, state))
             shutdown()
         }
     }
@@ -439,8 +442,14 @@ class WakeWordService : Service() {
      * In test mode: only sent live to the Test screen, so test attempts don't
      * push real call events out of the log.
      */
-    private fun fail(type: String, msg: String, arm: Boolean = mode == Mode.ARM) {
+    private fun fail(type: String, msg: EventLog.Msg, arm: Boolean = mode == Mode.ARM) {
         EventLog.add(this, type, msg, persist = arm)
+        if (arm) ProblemNotification.show(this, Settings.str(this, msg.res, *msg.args))
+    }
+
+    /** Failure text straight from Android (an exception), with no translation. */
+    private fun failRaw(type: String, msg: String, arm: Boolean = mode == Mode.ARM) {
+        EventLog.addRaw(this, type, msg, persist = arm)
         if (arm) ProblemNotification.show(this, msg)
     }
 

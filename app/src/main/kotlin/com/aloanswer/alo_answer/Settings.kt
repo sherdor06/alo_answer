@@ -1,9 +1,13 @@
 package com.aloanswer.alo_answer
 
+import android.app.LocaleManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.res.Configuration
+import android.content.res.Resources
+import android.os.Build
+import android.os.LocaleList
 import java.util.Locale
 
 /**
@@ -20,9 +24,16 @@ object Settings {
     const val KEY_INCOMING_ACTIVE = "incoming_active"
     const val KEY_LAST_SPEAKER = "last_speaker_result"
     const val KEY_ASKED_PREFIX = "asked_perm_"
-    /** "uz", "ru", "en", or "" = follow the phone's language. Set from the in-app picker. */
+    /**
+     * "uz", "ru", "en", or "" = follow the phone's language. Android 13+ keeps the
+     * choice itself (per-app language, also in the phone's Settings), so every
+     * screen, notification and service follows it at once; this key mirrors it and
+     * is the only store on Android 8–12.
+     */
     const val KEY_LANGUAGE = "language"
-    private val LANGUAGES = setOf("", "uz", "ru", "en")
+    /** Android 13+: the old in-app choice was handed to the system once (see [migrateLanguage]). */
+    private const val KEY_LANGUAGE_SYNCED = "language_synced"
+    val LANGUAGES = listOf("", "uz", "ru", "en")
 
     const val DEFAULT_SENSITIVITY = 0.5f
 
@@ -33,7 +44,62 @@ object Settings {
     fun sensitivity(ctx: Context) =
         prefs(ctx).getFloat(KEY_SENSITIVITY, DEFAULT_SENSITIVITY).coerceIn(0f, 1f)
 
-    fun language(ctx: Context) = prefs(ctx).getString(KEY_LANGUAGE, "") ?: ""
+    /** The app language: "uz", "ru", "en", or "" when it follows the phone. */
+    fun language(ctx: Context): String {
+        if (Build.VERSION.SDK_INT >= 33) {
+            val code = try {
+                ctx.getSystemService(LocaleManager::class.java)?.applicationLocales
+                    ?.takeIf { !it.isEmpty }?.get(0)?.language
+            } catch (_: Exception) {
+                null
+            }
+            return code?.takeIf { it in LANGUAGES }.orEmpty()
+        }
+        return (prefs(ctx).getString(KEY_LANGUAGE, "") ?: "").takeIf { it in LANGUAGES }.orEmpty()
+    }
+
+    /**
+     * Changes the language of the whole app. Android 13+ then recreates every open
+     * screen by itself; on older Android each screen checks in onResume.
+     */
+    fun setLanguage(ctx: Context, code: String) {
+        if (code !in LANGUAGES) return
+        prefs(ctx).edit().putString(KEY_LANGUAGE, code).putBoolean(KEY_LANGUAGE_SYNCED, true).commit()
+        if (Build.VERSION.SDK_INT >= 33) {
+            try {
+                ctx.getSystemService(LocaleManager::class.java)?.applicationLocales =
+                    if (code.isEmpty()) LocaleList.getEmptyLocaleList() else LocaleList.forLanguageTags(code)
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    /** Android 13+, once: a language chosen in an older version becomes the system per-app language. */
+    fun migrateLanguage(ctx: Context) {
+        if (Build.VERSION.SDK_INT < 33) return
+        val p = prefs(ctx)
+        if (p.getBoolean(KEY_LANGUAGE_SYNCED, false)) return
+        p.edit().putBoolean(KEY_LANGUAGE_SYNCED, true).apply()
+        val stored = p.getString(KEY_LANGUAGE, "") ?: ""
+        if (stored.isEmpty() || stored !in LANGUAGES) return
+        try {
+            val lm = ctx.getSystemService(LocaleManager::class.java) ?: return
+            if (lm.applicationLocales.isEmpty) lm.applicationLocales = LocaleList.forLanguageTags(stored)
+        } catch (_: Exception) {
+        }
+    }
+
+    /** The phone's own language (what "Phone language" means). */
+    fun systemLocale(ctx: Context): Locale {
+        if (Build.VERSION.SDK_INT >= 33) {
+            try {
+                ctx.getSystemService(LocaleManager::class.java)?.systemLocales
+                    ?.takeIf { !it.isEmpty }?.get(0)?.let { return it }
+            } catch (_: Exception) {
+            }
+        }
+        return Resources.getSystem().configuration.locales[0]
+    }
 
     /** Context whose resources use the in-app language (or the phone's, if none chosen). */
     fun localized(ctx: Context): Context {
@@ -106,7 +172,7 @@ object Settings {
         (map[KEY_SENSITIVITY] as? Number)?.let {
             e.putFloat(KEY_SENSITIVITY, it.toFloat().coerceIn(0f, 1f))
         }
-        (map[KEY_LANGUAGE] as? String)?.takeIf { it in LANGUAGES }?.let { e.putString(KEY_LANGUAGE, it) }
         e.apply()
+        (map[KEY_LANGUAGE] as? String)?.let { setLanguage(ctx, it) }
     }
 }

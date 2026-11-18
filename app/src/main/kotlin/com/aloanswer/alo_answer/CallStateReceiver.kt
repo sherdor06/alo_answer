@@ -44,7 +44,7 @@ class CallStateReceiver : BroadcastReceiver() {
             }
             TelephonyManager.EXTRA_STATE_OFFHOOK -> {
                 if (Settings.incomingActive(app) && previous == TelephonyManager.EXTRA_STATE_RINGING) {
-                    EventLog.add(app, EventLog.OFFHOOK, Settings.str(app, R.string.ev_offhook))
+                    EventLog.add(app, EventLog.OFFHOOK, EventLog.Msg(R.string.ev_offhook))
                 }
                 WakeWordService.instance?.onCallStateChanged(state)
             }
@@ -52,8 +52,7 @@ class CallStateReceiver : BroadcastReceiver() {
                 if (Settings.incomingActive(app)) {
                     EventLog.add(
                         app, EventLog.IDLE,
-                        Settings.str(
-                            app,
+                        EventLog.Msg(
                             if (previous == TelephonyManager.EXTRA_STATE_RINGING) R.string.ev_missed
                             else R.string.ev_call_ended
                         )
@@ -68,16 +67,16 @@ class CallStateReceiver : BroadcastReceiver() {
 
     private fun onRinging(app: Context) {
         Settings.setIncomingActive(app, true)
-        EventLog.add(app, EventLog.RING, Settings.str(app, R.string.ev_ringing))
+        EventLog.add(app, EventLog.RING, EventLog.Msg(R.string.ev_ringing))
 
         val requestedAt = SystemClock.elapsedRealtime()
         val dialerMode = DialerRole.isDefault(app)
         if (!dialerMode) try {
             ArmActivity.launch(app)
         } catch (e: Exception) {
-            val msg = Settings.str(app, R.string.err_open_listener, "${e.javaClass.simpleName}: ${e.message}")
+            val msg = EventLog.Msg(R.string.err_open_listener, "${e.javaClass.simpleName}: ${e.message}")
             EventLog.add(app, EventLog.MIC_BLOCKED, msg)
-            ProblemNotification.show(app, msg)
+            ProblemNotification.show(app, Settings.str(app, msg.res, *msg.args))
             return
         }
 
@@ -93,16 +92,13 @@ class CallStateReceiver : BroadcastReceiver() {
                 if (listenerOpenedAt < requestedAt - 5_000 &&
                     Settings.lastCallState(app) == TelephonyManager.EXTRA_STATE_RINGING
                 ) {
-                    val reason = Settings.str(
-                        app,
-                        when {
-                            dialerMode -> R.string.blocked_dialer
-                            !AndroidSettings.canDrawOverlays(app) -> R.string.blocked_overlay
-                            else -> R.string.blocked_xiaomi
-                        }
-                    )
-                    EventLog.add(app, EventLog.MIC_BLOCKED, reason)
-                    ProblemNotification.show(app, reason)
+                    val reason = when {
+                        dialerMode -> R.string.blocked_dialer
+                        !AndroidSettings.canDrawOverlays(app) -> R.string.blocked_overlay
+                        else -> R.string.blocked_xiaomi
+                    }
+                    EventLog.add(app, EventLog.MIC_BLOCKED, EventLog.Msg(reason))
+                    ProblemNotification.show(app, Settings.str(app, reason))
                 }
             } finally {
                 pending.finish()
