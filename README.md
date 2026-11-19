@@ -277,6 +277,8 @@ The app has a **Xiaomi / Redmi setup** screen with buttons for each step.
      permission is granted.
    - **Show on Lock screen** — needed when the phone is locked while it rings.
 4. **Display over other apps: on.** This is also asked for during onboarding.
+   As the default phone app, Alo Answer doesn't need it, so the screen leaves
+   this step out.
 5. *(Optional)* Lock the app in Recents.
 
 The Xiaomi buttons open `com.miui.securitycenter` / `com.miui.powerkeeper`

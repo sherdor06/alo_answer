@@ -36,12 +36,13 @@ class XiaomiSetupActivity : Screen() {
             )
         }
         content.addView(text(getString(R.string.ui_xiaomi_intro), 15.5f), matchWrap().apply { bottomMargin = dp(16) })
+        var n = 0
         step(
-            1, R.string.ui_step_autostart_title, R.string.ui_step_autostart_why, R.string.ui_step_autostart_path,
+            ++n, R.string.ui_step_autostart_title, R.string.ui_step_autostart_why, R.string.ui_step_autostart_path,
             R.string.ui_step_autostart_btn, "autostart"
         )
         step(
-            2, R.string.ui_step_battery_title, R.string.ui_step_battery_why, R.string.ui_step_battery_path,
+            ++n, R.string.ui_step_battery_title, R.string.ui_step_battery_why, R.string.ui_step_battery_path,
             R.string.ui_step_battery_btn, "battery",
             getString(
                 if (XiaomiIntents.isIgnoringBatteryOptimizations(this)) R.string.ui_battery_reported_off
@@ -49,21 +50,24 @@ class XiaomiSetupActivity : Screen() {
             )
         )
         step(
-            3, R.string.ui_step_other_title, R.string.ui_step_other_why, R.string.ui_step_other_path,
+            ++n, R.string.ui_step_other_title, R.string.ui_step_other_why, R.string.ui_step_other_path,
             R.string.ui_step_other_btn, "otherPermissions"
         )
-        step(
-            4, R.string.ui_step_overlay_title, R.string.ui_step_overlay_why, R.string.ui_step_overlay_path,
-            R.string.ui_step_overlay_btn, "overlay",
-            getString(
-                if (PermissionHelper.status(this, PermissionHelper.OVERLAY) == PermissionHelper.GRANTED) {
-                    R.string.ui_overlay_allowed
-                } else {
-                    R.string.ui_overlay_not_yet
-                }
+        // Not needed as the default phone app: our own call screen starts the listening.
+        if (PermissionHelper.OVERLAY in PermissionHelper.required(this)) {
+            step(
+                ++n, R.string.ui_step_overlay_title, R.string.ui_step_overlay_why, R.string.ui_step_overlay_path,
+                R.string.ui_step_overlay_btn, "overlay",
+                getString(
+                    if (PermissionHelper.status(this, PermissionHelper.OVERLAY) == PermissionHelper.GRANTED) {
+                        R.string.ui_overlay_allowed
+                    } else {
+                        R.string.ui_overlay_not_yet
+                    }
+                )
             )
-        )
-        step(5, R.string.ui_step_lock_title, R.string.ui_step_lock_why, R.string.ui_step_lock_path, null, null)
+        }
+        step(++n, R.string.ui_step_lock_title, R.string.ui_step_lock_why, R.string.ui_step_lock_path, null, null)
         content.addView(text(getString(R.string.ui_xiaomi_footer), 14f, c.dim), matchWrap().apply { topMargin = dp(4) })
     }
 
