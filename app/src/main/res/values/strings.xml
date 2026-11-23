@@ -8,8 +8,8 @@
     <string name="notif_problem_title">Voice answer didn’t start</string>
     <string name="notif_listen_channel">Listening</string>
     <string name="notif_listen_channel_desc">Shown while the microphone is open</string>
-    <string name="notif_listen_title_call">Say “alo” to answer</string>
-    <string name="notif_listen_title_test">Test: listening for “alo”</string>
+    <string name="notif_listen_title_call">Say %1$s to answer</string>
+    <string name="notif_listen_title_test">Test: listening for %1$s</string>
     <string name="notif_listen_text">Microphone is open</string>
     <string name="notif_action_stop">Stop</string>
 
@@ -18,13 +18,12 @@
     <string name="ev_offhook">Call answered (off-hook)</string>
     <string name="ev_missed">Stopped ringing (missed or declined)</string>
     <string name="ev_call_ended">Call ended</string>
-    <string name="ev_listening_call">Listening for the wake word (call ringing)</string>
+    <string name="ev_listening_call">Listening for the answer word (call ringing)</string>
     <string name="ev_listening_test">Test listening started</string>
     <string name="ev_wake">Wake word heard</string>
-    <string name="ev_wake_test">Wake word heard (test)</string>
     <string name="ev_answer_requested">acceptRingingCall() called; waiting for off-hook</string>
     <string name="ev_answer_no_perm">Answer-calls permission not granted</string>
-    <string name="ev_timeout">No wake word within the time limit; mic released</string>
+    <string name="ev_timeout">No answer word within the time limit; mic released</string>
     <string name="ev_stopped">Listening stopped</string>
     <string name="ev_not_ringing">Phone stopped ringing before listening started</string>
     <string name="ev_call_state">Call state %1$s; mic released</string>
@@ -44,7 +43,7 @@
 
     <!-- Accessibility service (auto speaker) -->
     <string name="a11y_label">Alo Answer: speaker</string>
-    <string name="a11y_description">After Alo Answer picks up a call because you said “alo”, this presses the Speaker button on the call screen so you can talk hands-free. At any other time it does nothing, and it stores nothing.</string>
+    <string name="a11y_description">After Alo Answer picks up a call because you said your answer word, this presses the Speaker button on the call screen so you can talk hands-free. At any other time it does nothing, and it stores nothing.</string>
     <string name="ev_speaker_clicked">Speaker turned on by pressing the call screen’s button: %1$s</string>
     <string name="ev_speaker_click_failed">Couldn’t press the Speaker button (%1$s). Tried AudioManager instead:</string>
     <string name="ev_speaker_no_a11y">Auto speaker is off (the accessibility service isn’t enabled). Tried AudioManager instead:</string>
@@ -69,9 +68,9 @@
     <string name="incall_hold">Hold</string>
     <string name="incall_end">End</string>
     <string name="incall_choose_sim">Call with</string>
-    <string name="incall_say_alo">Say “allo” to answer</string>
-    <string name="incall_listening">Listening for “allo”…</string>
-    <string name="incall_heard">“Allo” heard — answering</string>
+    <string name="incall_say_alo">Say %1$s to answer</string>
+    <string name="incall_listening">Listening for %1$s…</string>
+    <string name="incall_heard">Heard %1$s — answering</string>
     <string name="incall_voice_off">Voice answer is off</string>
     <string name="notif_incoming_channel">Incoming calls</string>
     <string name="notif_ongoing_channel">Ongoing calls</string>
@@ -116,12 +115,12 @@
     <string name="ui_back">Back</string>
     <string name="ui_battery_reported_off">Android reports battery optimization off ✓. (Xiaomi\'s own setting may not show up here.)</string>
     <string name="ui_battery_reported_on">Android reports battery optimization on. (Xiaomi\'s own setting may not show up here.)</string>
-    <string name="ui_blocker_model">add the Uzbek speech model (assets/model-uz) and rebuild</string>
+    <string name="ui_blocker_model">add the speech models (assets/model-uz, model-ru, model-en) and rebuild</string>
     <string name="ui_blocker_model_loading">wait until the speech model is ready</string>
     <string name="ui_blocker_perms">allow all permissions</string>
     <string name="ui_cancel">Cancel</string>
     <string name="ui_check_battery">Battery optimization off (as Android reports it)</string>
-    <string name="ui_check_model_asset">Uzbek speech model included</string>
+    <string name="ui_check_model_asset">Speech model included: %1$s</string>
     <string name="ui_check_model_ready">Model ready on this phone (works offline)</string>
     <string name="ui_clear">Clear</string>
     <string name="ui_clear_log_q">Clear the event log?</string>
@@ -145,21 +144,21 @@
     <string name="ui_event_stopped">Stopped listening</string>
     <string name="ui_event_test_hit">Test hit</string>
     <string name="ui_event_timeout">Timed out</string>
-    <string name="ui_event_wake">Wake word heard</string>
+    <string name="ui_event_wake">Answer word heard</string>
     <string name="ui_fix">Fix</string>
     <string name="ui_language">Language</string>
     <string name="ui_last20">Last 20 events</string>
     <string name="ui_listens_for">Listens for: %1$s</string>
-    <string name="ui_listens_for_grammar">Listens for: %1$s (only these words)</string>
+    <string name="ui_listens_for_grammar">Listens for: %1$s (answers only to these)</string>
     <string name="ui_make_default">Make default</string>
     <string name="ui_master_off">Off</string>
-    <string name="ui_master_on">On: when the phone rings, say “alo” to answer</string>
-    <string name="ui_master_title">Answer calls by saying “alo”</string>
+    <string name="ui_master_on">On: when the phone rings, say %1$s to answer</string>
+    <string name="ui_master_title">Answer calls by voice</string>
     <string name="ui_model_preparing">Preparing the speech model (first start takes a few seconds)…</string>
     <string name="ui_no_events">No events yet. They appear here when a call rings.</string>
     <string name="ui_not_listening">Not listening</string>
     <string name="ui_not_xiaomi">These steps are for Xiaomi, Redmi and POCO phones. This phone reports itself as %1$s.</string>
-    <string name="ui_onboarding_intro">Alo Answer needs these to pick up calls when you say “alo”. Each one is used only for what is written under it.</string>
+    <string name="ui_onboarding_intro">Alo Answer needs these to pick up calls when you say %1$s. Each one is used only for what is written under it.</string>
     <string name="ui_open_accessibility">Open Accessibility</string>
     <string name="ui_open_app_info">App info</string>
     <string name="ui_open_dialer">Dial pad</string>
@@ -173,15 +172,15 @@
     <string name="ui_perm_title_notifications">Notifications</string>
     <string name="ui_perm_title_overlay">Display over other apps</string>
     <string name="ui_perm_title_phone">Phone state</string>
-    <string name="ui_perm_why_answer">Lets the app pick up the ringing call after you say “alo”.</string>
-    <string name="ui_perm_why_mic">Listens for “alo” only while the phone is ringing (at most 30 seconds) or during a test. Speech is recognized offline on the phone itself; the app has no internet access and does not save the audio.</string>
+    <string name="ui_perm_why_answer">Lets the app pick up the ringing call after you say %1$s.</string>
+    <string name="ui_perm_why_mic">Listens for %1$s only while the phone is ringing (at most 30 seconds) or during a test. Speech is recognized offline on the phone itself; the app has no internet access and does not save the audio.</string>
     <string name="ui_perm_why_notifications">Android shows a notification whenever the microphone is open. The app also uses notifications to tell you when voice answering could not start, and why.</string>
     <string name="ui_perm_why_overlay">Android lets an app use the microphone in the background only if listening was started while the app was on screen. So when the phone rings, the app shows an invisible screen for under a second to start listening. Opening that screen needs this permission.</string>
     <string name="ui_perm_why_phone">Lets the app notice when the phone starts ringing, gets answered or hangs up. The caller\'s number is never read.</string>
     <string name="ui_permanently_denied">You chose “Don\'t allow” earlier, so Android won\'t ask again. Open Settings → Permissions and allow it there.</string>
     <string name="ui_permissions">Permissions</string>
     <string name="ui_perms_missing">Some permissions are missing</string>
-    <string name="ui_say_alo">Say “alo”</string>
+    <string name="ui_say_alo">Say %1$s</string>
     <string name="ui_sensitivity">Detection sensitivity: %1$s</string>
     <string name="ui_sensitivity_help">Higher: catches “alo” more easily but answers by mistake more often. Lower: fewer mistakes, but you may need to repeat yourself. Applies from the next call or test.</string>
     <string name="ui_setup_check">Setup check</string>
@@ -220,7 +219,7 @@
     <string name="ui_step_overlay_title">Display over other apps: on</string>
     <string name="ui_step_overlay_why">The Android permission that lets the app open its listening screen while the phone rings.</string>
     <string name="ui_test_busy">A call is ringing right now. Try the test after it ends.</string>
-    <string name="ui_test_footnote">Listens for up to 60 seconds and never answers anything. During a real call the ringtone plays next to the microphone, which can make “alo” harder to catch than it is here. Also try it from a meter or two away.</string>
+    <string name="ui_test_footnote">Listens for up to 60 seconds and never answers anything. During a real call the ringtone plays next to the microphone, which can make the answer word harder to catch than it is here. Also try it from a meter or two away.</string>
     <string name="ui_test_listening">Test listening</string>
     <string name="ui_to_turn_on">To turn on: %1$s</string>
     <string name="ui_xiaomi_failed">Couldn\'t open settings. Use the path shown.</string>
@@ -229,8 +228,8 @@
     <string name="ui_xiaomi_intro">HyperOS stops background apps much more aggressively than plain Android. Without these settings the phone may ring and nothing happens.</string>
     <string name="ui_xiaomi_setup">Xiaomi / Redmi setup</string>
     <plurals name="ui_heard_times">
-        <item quantity="one">Heard “alo” %d time</item>
-        <item quantity="other">Heard “alo” %d times</item>
+        <item quantity="one">Heard %d time</item>
+        <item quantity="other">Heard %d times</item>
     </plurals>
     <string name="ui_lang_uz" translatable="false">Oʻzbekcha</string>
     <string name="ui_lang_ru" translatable="false">Русский</string>
@@ -248,7 +247,7 @@
     <string name="ui_level_very_high">Very high</string>
     <string name="ui_sens_low_hint">Fewer mistakes</string>
     <string name="ui_sens_high_hint">Hears more easily</string>
-    <string name="ui_test_listening_sub">Check how well it hears “alo”</string>
+    <string name="ui_test_listening_sub">Check how well it hears your answer word</string>
     <string name="ui_dialer_on_short">Alo Answer is your phone app</string>
     <string name="ui_dialer_off_short">Make Alo Answer your phone app: voice answer works most reliably and the speaker turns on by itself. You can switch back any time in the phone’s settings.</string>
     <string name="ui_open_dialer_sub">Recents, contacts and keypad</string>
@@ -325,4 +324,43 @@
         <item quantity="other">%d missed calls</item>
     </plurals>
     <string name="ev_debug_fake_detector" translatable="false">[DEBUG: simulated detector, mic not opened]</string>
+
+    <!-- Answer words -->
+    <string name="dialer_voice_off">Off</string>
+    <string name="dialer_voice_on_desc">Voice answer is on: %1$s</string>
+    <string name="dialer_voice_off_desc">Voice answer is off</string>
+    <string name="dialer_voice_intro_on">When the phone rings, say %1$s and the app answers by itself. You can pick your own word, in Uzbek, Russian or English.</string>
+    <string name="dialer_voice_intro_off">When the phone rings, say %1$s and the app answers by itself. It’s turned off now.</string>
+    <string name="dialer_voice_pick">Pick the word</string>
+    <string name="dialer_voice_turn_on">Turn on</string>
+    <string name="dialer_voice_dismiss">Close</string>
+    <string name="wake_lang_uz">Uzbek</string>
+    <string name="wake_lang_ru">Russian</string>
+    <string name="wake_lang_en">English</string>
+    <string name="ui_wake_multi_lang">Words in more than one language are ticked: the app listens with each language’s model at once, so it starts a little later and uses a bit more battery.</string>
+    <string name="ev_wake_word">“%1$s”</string>
+    <string name="ev_wake_word_detail">“%1$s” (%2$s)</string>
+    <string name="wake_quote">“%1$s”</string>
+    <string name="wake_or">%1$s or %2$s</string>
+    <string name="ui_wake_title">Answer word</string>
+    <string name="ui_wake_intro">When the phone rings, say any word ticked here and the app answers. Tick ready-made words or add your own, in Uzbek, Russian or English. One or two words work best: the more you tick, the more often it may answer by mistake.</string>
+    <string name="ui_wake_default">Default</string>
+    <string name="ui_wake_own">Your own</string>
+    <string name="ui_wake_add">Add a word or phrase</string>
+    <string name="ui_wake_add_sub">Uzbek, Russian or English, up to %1$d words</string>
+    <string name="ui_wake_add_hint">For example: %1$s</string>
+    <string name="ui_wake_add_help">Uzbek words can be in Latin or Cyrillic letters. The app checks that the speech model knows every word, since it can’t hear a word it doesn’t know.</string>
+    <string name="ui_wake_add_btn">Add</string>
+    <string name="ui_wake_checking">Checking…</string>
+    <string name="ui_wake_unknown">The speech model doesn’t know: %1$s. Try another spelling or another word.</string>
+    <string name="ui_wake_check_failed">Couldn’t check the word right now. Try again.</string>
+    <string name="ui_wake_short">This word is very short, so the app may answer by mistake when it hears something similar. Tap Add again to keep it.</string>
+    <string name="ui_wake_too_long">Use at most %1$d words.</string>
+    <string name="ui_wake_need_one">Keep at least one word ticked.</string>
+    <string name="ui_wake_delete">Delete</string>
+    <string name="ui_wake_delete_q">Delete %1$s?</string>
+    <string name="ui_wake_many">Many words are ticked: the app may answer by mistake more often.</string>
+    <string name="ui_wake_applies">Applies from the next call or test.</string>
+    <string name="ui_wake_limit">You can add up to %1$d words.</string>
+    <string name="ui_last_heard">Last: %1$s</string>
 </resources>

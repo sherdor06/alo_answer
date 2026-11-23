@@ -37,6 +37,7 @@ import com.aloanswer.alo_answer.EventLog
 import com.aloanswer.alo_answer.R
 import com.aloanswer.alo_answer.Settings
 import com.aloanswer.alo_answer.WakeWordService
+import com.aloanswer.alo_answer.WakeWords
 
 /**
  * The call screen while Alo Answer is the default phone app: incoming call
@@ -106,7 +107,7 @@ class InCallActivity : Activity() {
     private var simLabels: Map<String, String> = emptyMap()
 
     private val callListener = CallManager.Listener { render() }
-    private val eventListener: (Map<String, Any>) -> Unit = { e -> onVoiceEvent(e["type"] as? String, e["msg"] as? String) }
+    private val eventListener: (Map<String, Any>) -> Unit = { e -> onVoiceEvent(e) }
     private val ticker = object : Runnable {
         override fun run() {
             renderStatus()
@@ -187,7 +188,7 @@ class InCallActivity : Activity() {
             voiceView.text = getString(R.string.incall_voice_off)
             return
         }
-        voiceView.text = getString(R.string.incall_say_alo)
+        voiceView.text = getString(R.string.incall_say_alo, WakeWords.spoken(this))
         if (WakeWordService.isArmed) return
         try {
             // We are visible right now, so this microphone service may use the mic.
@@ -197,12 +198,15 @@ class InCallActivity : Activity() {
         }
     }
 
-    private fun onVoiceEvent(type: String?, msg: String?) {
+    private fun onVoiceEvent(e: Map<String, Any>) {
         if (!::voiceView.isInitialized) return
-        when (type) {
-            EventLog.LISTENING -> voiceView.text = getString(R.string.incall_listening)
-            EventLog.WAKE -> voiceView.text = getString(R.string.incall_heard)
-            EventLog.ERROR, EventLog.MIC_BLOCKED -> voiceView.text = msg ?: ""
+        when (e["type"] as? String) {
+            EventLog.LISTENING -> voiceView.text = getString(R.string.incall_listening, WakeWords.spoken(this))
+            EventLog.WAKE -> voiceView.text = getString(
+                R.string.incall_heard,
+                EventLog.firstArg(e)?.let { getString(R.string.wake_quote, it) } ?: WakeWords.spoken(this)
+            )
+            EventLog.ERROR, EventLog.MIC_BLOCKED -> voiceView.text = e["msg"] as? String ?: ""
         }
     }
 

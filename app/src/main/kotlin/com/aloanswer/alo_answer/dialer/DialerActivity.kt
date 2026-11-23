@@ -29,10 +29,14 @@ import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import android.content.res.ColorStateList
+import android.graphics.drawable.RippleDrawable
 import com.aloanswer.alo_answer.MainActivity
 import com.aloanswer.alo_answer.R
 import com.aloanswer.alo_answer.Settings
+import com.aloanswer.alo_answer.WakeWords
 import com.aloanswer.alo_answer.ui.AppColors
+import com.aloanswer.alo_answer.ui.WakeWordsActivity
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -92,6 +96,11 @@ class DialerActivity : Activity() {
     private val navLabels = arrayOfNulls<TextView>(3)
     private lateinit var badge: TextView
     private lateinit var titleView: TextView
+    /** Voice answer at a glance, on every tab: «alo» (or "Off"); opens its settings. */
+    private lateinit var voiceChip: TextView
+
+    /** True while the keypad is open to add a second call (no voice answer hints then). */
+    internal val addingCall get() = addCallMode
 
     private var pendingCall: Uri? = null
     private var pendingWrite: (() -> Unit)? = null
@@ -178,6 +187,9 @@ class DialerActivity : Activity() {
         loadContacts()
         if (currentTab == TAB_RECENTS) recents.onShown() else recents.reload()
         updateBadge()
+        // Voice answer may have been turned on/off or its words changed in the settings.
+        renderVoiceChip()
+        keypad.onShown()
     }
 
     override fun onPause() {
@@ -374,6 +386,40 @@ class DialerActivity : Activity() {
     private fun renderTitle() {
         if (!::titleView.isInitialized) return
         titleView.text = if (addCallMode) getString(R.string.incall_add_call) else getString(R.string.app_title)
+        renderVoiceChip()
+    }
+
+    private fun renderVoiceChip() {
+        if (!::voiceChip.isInitialized) return
+        voiceChip.visibility = if (addCallMode) View.GONE else View.VISIBLE
+        val on = Settings.isEnabled(this)
+        val fg = if (on) c.onPrimaryContainer else c.dim
+        voiceChip.text = if (on) {
+            WakeWords.selected(this).joinToString(", ") { getString(R.string.wake_quote, it.label) }
+        } else {
+            getString(R.string.dialer_voice_off)
+        }
+        voiceChip.setTextColor(fg)
+        val icon = getDrawable(if (on) R.drawable.ic_mic else R.drawable.ic_mic_off)?.mutate()?.apply {
+            setBounds(0, 0, dp(18), dp(18))
+            setTint(fg)
+        }
+        voiceChip.setCompoundDrawablesRelative(icon, null, null, null)
+        voiceChip.background = RippleDrawable(
+            ColorStateList.valueOf(0x33808080),
+            rounded(if (on) c.primaryContainer else c.neutralContainer, dp(16).toFloat()), null
+        )
+        voiceChip.contentDescription = if (on) {
+            getString(R.string.dialer_voice_on_desc, WakeWords.spoken(this))
+        } else {
+            getString(R.string.dialer_voice_off_desc)
+        }
+    }
+
+    /** The answer word screen when voice answer is on; the settings (with its switch) when it is off. */
+    internal fun openVoiceAnswer(pickWord: Boolean = Settings.isEnabled(this)) {
+        Settings.setVoiceIntroSeen(this)
+        startActivity(Intent(this, if (pickWord) WakeWordsActivity::class.java else MainActivity::class.java))
     }
 
     // ---------------- menu ----------------
@@ -388,13 +434,15 @@ class DialerActivity : Activity() {
             menu.menu.add(0, 2, 1, R.string.ui_call_settings)
             menu.menu.add(0, 3, 2, R.string.ui_blocked_numbers)
         }
-        menu.menu.add(0, 4, 3, R.string.dialer_settings)
+        menu.menu.add(0, 5, 3, R.string.ui_wake_title)
+        menu.menu.add(0, 4, 4, R.string.dialer_settings)
         menu.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> confirmClearHistory()
                 2 -> PhoneSettings.openCallSettings(this)
                 3 -> PhoneSettings.openBlocked(this)
                 4 -> startActivity(Intent(this, MainActivity::class.java))
+                5 -> openVoiceAnswer(pickWord = true)
             }
             true
         }
@@ -438,6 +486,21 @@ class DialerActivity : Activity() {
             ellipsize = TextUtils.TruncateAt.END
         }
         bar.addView(titleView, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        voiceChip = TextView(this).apply {
+            textSize = 13.5f
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+            maxWidth = dp(160)
+            gravity = Gravity.CENTER_VERTICAL
+            compoundDrawablePadding = dp(6)
+            minHeight = dp(34)
+            setPadding(dp(10), dp(6), dp(12), dp(6))
+            setOnClickListener { openVoiceAnswer() }
+        }
+        bar.addView(voiceChip, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp(8) })
         lateinit var more: View
         more = iconButton(R.drawable.ic_more_vert, c.text, getString(R.string.dialer_more)) { showMenu(more) }
         bar.addView(more, LinearLayout.LayoutParams(dp(48), dp(48)))

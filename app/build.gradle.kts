@@ -32,8 +32,8 @@ android {
         targetSdk = 36
         // The Flutter builds used 2000 + build number (the last one, 1.4.0, was 2006).
         // Staying above that lets this version install over them with the same key.
-        versionCode = 2009
-        versionName = "2.1.0"
+        versionCode = 2010
+        versionName = "2.2.0"
         // 64-bit ARM phones only (every current Redmi). Add "armeabi-v7a" for old 32-bit
         // phones or "x86_64" for an Intel-Mac emulator; each adds its own Vosk library.
         ndk {

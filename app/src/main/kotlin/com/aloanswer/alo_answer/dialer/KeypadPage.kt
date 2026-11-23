@@ -18,6 +18,8 @@ import android.widget.PopupMenu
 import android.widget.ScrollView
 import android.widget.TextView
 import com.aloanswer.alo_answer.R
+import com.aloanswer.alo_answer.Settings
+import com.aloanswer.alo_answer.WakeWords
 
 /**
  * Keypad tab: the number (formatted, long-press to copy or paste), smart dial
@@ -109,6 +111,8 @@ internal class KeypadPage(private val a: DialerActivity) {
         val digits = typed.filter(Char::isDigit)
         if (digits.isEmpty()) {
             noMatch.visibility = View.GONE
+            // Nothing typed: the empty space above the number introduces voice answer, once.
+            if (!Settings.voiceIntroSeen(a) && !a.addingCall) results.addView(voiceIntro())
             return
         }
         val matches = ArrayList<Match>()
@@ -267,6 +271,62 @@ internal class KeypadPage(private val a: DialerActivity) {
             bottomMargin = a.dp(14)
         })
         return col
+    }
+
+    /**
+     * A card that tells what the app is for: answering by voice, with the word to say and
+     * a button to pick another one (or to turn it on). Closing it, or using it, hides it for good.
+     */
+    private fun voiceIntro(): View {
+        val on = Settings.isEnabled(a)
+        val card = LinearLayout(a).apply {
+            orientation = LinearLayout.VERTICAL
+            background = rounded(c.primaryContainer, a.dp(20).toFloat())
+            setPadding(a.dp(16), a.dp(6), a.dp(6), a.dp(6))
+        }
+        val head = LinearLayout(a).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        head.addView(ImageView(a).apply {
+            setImageResource(R.drawable.ic_record_voice_over)
+            setColorFilter(c.onPrimaryContainer)
+        }, LinearLayout.LayoutParams(a.dp(22), a.dp(22)).apply { marginEnd = a.dp(10) })
+        head.addView(TextView(a).apply {
+            setText(R.string.ui_master_title)
+            textSize = 16f
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            setTextColor(c.onPrimaryContainer)
+        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        head.addView(a.iconButton(R.drawable.ic_close, c.onPrimaryContainer, a.getString(R.string.dialer_voice_dismiss)) {
+            Settings.setVoiceIntroSeen(a)
+            refreshSuggestions()
+        }, LinearLayout.LayoutParams(a.dp(44), a.dp(44)))
+        card.addView(head)
+        card.addView(TextView(a).apply {
+            text = a.getString(if (on) R.string.dialer_voice_intro_on else R.string.dialer_voice_intro_off, WakeWords.spoken(a))
+            textSize = 14.5f
+            setTextColor(c.onPrimaryContainer)
+            setLineSpacing(0f, 1.1f)
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            marginEnd = a.dp(10)
+        })
+        card.addView(TextView(a).apply {
+            setText(if (on) R.string.dialer_voice_pick else R.string.dialer_voice_turn_on)
+            textSize = 14.5f
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            setTextColor(c.primary)
+            setPadding(a.dp(14), a.dp(10), a.dp(14), a.dp(10))
+            background = a.rippleRect()
+            setOnClickListener { a.openVoiceAnswer(pickWord = on) }
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            gravity = Gravity.END
+            topMargin = a.dp(2)
+        })
+        return FrameLayout(a).apply {
+            setPadding(a.dp(16), a.dp(8), a.dp(16), a.dp(8))
+            addView(card)
+        }
     }
 
     private fun link(icon: Int, label: Int, onClick: () -> Unit) = TextView(a).apply {

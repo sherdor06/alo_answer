@@ -6,8 +6,8 @@
     <string name="notif_problem_title">Голосовой ответ не запустился</string>
     <string name="notif_listen_channel">Прослушивание</string>
     <string name="notif_listen_channel_desc">Показывается, пока включён микрофон</string>
-    <string name="notif_listen_title_call">Скажите «ало», чтобы ответить</string>
-    <string name="notif_listen_title_test">Тест: слушаю «ало»</string>
+    <string name="notif_listen_title_call">Скажите %1$s, чтобы ответить</string>
+    <string name="notif_listen_title_test">Тест: слушаю %1$s</string>
     <string name="notif_listen_text">Микрофон включён</string>
     <string name="notif_action_stop">Стоп</string>
 
@@ -15,13 +15,12 @@
     <string name="ev_offhook">Звонок принят</string>
     <string name="ev_missed">Звонок прекратился (пропущен или отклонён)</string>
     <string name="ev_call_ended">Звонок завершён</string>
-    <string name="ev_listening_call">Слушаю «ало» (идёт звонок)</string>
+    <string name="ev_listening_call">Слушаю слово для ответа (идёт звонок)</string>
     <string name="ev_listening_test">Тестовое прослушивание началось</string>
     <string name="ev_wake">Услышано «ало»</string>
-    <string name="ev_wake_test">Услышано «ало» (тест)</string>
     <string name="ev_answer_requested">Вызван acceptRingingCall(); ждём ответа</string>
     <string name="ev_answer_no_perm">Нет разрешения на ответ на звонки</string>
-    <string name="ev_timeout">«Ало» не прозвучало вовремя; микрофон выключен</string>
+    <string name="ev_timeout">Слово для ответа не прозвучало вовремя; микрофон выключен</string>
     <string name="ev_stopped">Прослушивание остановлено</string>
     <string name="ev_not_ringing">Звонок прекратился до начала прослушивания</string>
     <string name="ev_call_state">Состояние звонка: %1$s; микрофон выключен</string>
@@ -39,7 +38,7 @@
     <string name="err_start_listening">Не удалось начать прослушивание: %1$s</string>
 
     <string name="a11y_label">Alo Answer: динамик</string>
-    <string name="a11y_description">Когда Alo Answer отвечает на звонок по слову «ало», эта служба нажимает кнопку «Динамик» на экране звонка, чтобы можно было говорить без рук. В остальное время она ничего не делает и ничего не сохраняет.</string>
+    <string name="a11y_description">Когда Alo Answer отвечает на звонок по вашему слову, эта служба нажимает кнопку «Динамик» на экране звонка, чтобы можно было говорить без рук. В остальное время она ничего не делает и ничего не сохраняет.</string>
     <string name="ev_speaker_clicked">Динамик включён нажатием кнопки на экране звонка: %1$s</string>
     <string name="ev_speaker_click_failed">Не удалось нажать кнопку «Динамик» (%1$s). Попытка через AudioManager:</string>
     <string name="ev_speaker_no_a11y">Авто-динамик выключен (служба специальных возможностей не включена). Попытка через AudioManager:</string>
@@ -63,9 +62,9 @@
     <string name="incall_hold">Удержание</string>
     <string name="incall_end">Завершить</string>
     <string name="incall_choose_sim">Позвонить через</string>
-    <string name="incall_say_alo">Скажите «алло», чтобы ответить</string>
-    <string name="incall_listening">Слушаю «алло»…</string>
-    <string name="incall_heard">Услышано «алло» — отвечаю</string>
+    <string name="incall_say_alo">Скажите %1$s, чтобы ответить</string>
+    <string name="incall_listening">Слушаю %1$s…</string>
+    <string name="incall_heard">Услышано %1$s — отвечаю</string>
     <string name="incall_voice_off">Голосовой ответ выключен</string>
     <string name="notif_incoming_channel">Входящие вызовы</string>
     <string name="notif_ongoing_channel">Текущие вызовы</string>
@@ -110,12 +109,12 @@
     <string name="ui_back">Назад</string>
     <string name="ui_battery_reported_off">По данным Android, оптимизация батареи выключена ✓. (Собственная настройка Xiaomi может здесь не отображаться.)</string>
     <string name="ui_battery_reported_on">По данным Android, оптимизация батареи включена. (Собственная настройка Xiaomi может здесь не отображаться.)</string>
-    <string name="ui_blocker_model">добавьте узбекскую модель речи (assets/model-uz) и пересоберите</string>
+    <string name="ui_blocker_model">добавьте модели речи (assets/model-uz, model-ru, model-en) и пересоберите</string>
     <string name="ui_blocker_model_loading">дождитесь готовности модели речи</string>
     <string name="ui_blocker_perms">дайте все разрешения</string>
     <string name="ui_cancel">Отмена</string>
     <string name="ui_check_battery">Оптимизация батареи выключена (по данным Android)</string>
-    <string name="ui_check_model_asset">Узбекская модель речи есть в приложении</string>
+    <string name="ui_check_model_asset">Модель речи есть в приложении: %1$s</string>
     <string name="ui_check_model_ready">Модель готова на телефоне (работает без интернета)</string>
     <string name="ui_clear">Очистить</string>
     <string name="ui_clear_log_q">Очистить журнал событий?</string>
@@ -139,21 +138,21 @@
     <string name="ui_event_stopped">Прослушивание остановлено</string>
     <string name="ui_event_test_hit">Тест: услышано</string>
     <string name="ui_event_timeout">Время вышло</string>
-    <string name="ui_event_wake">Услышано «ало»</string>
+    <string name="ui_event_wake">Услышано слово для ответа</string>
     <string name="ui_fix">Исправить</string>
     <string name="ui_language">Язык</string>
     <string name="ui_last20">Последние 20 событий</string>
     <string name="ui_listens_for">Слушает слова: %1$s</string>
-    <string name="ui_listens_for_grammar">Слушает слова: %1$s (только эти слова)</string>
+    <string name="ui_listens_for_grammar">Слушает слова: %1$s (отвечает только на них)</string>
     <string name="ui_make_default">Сделать основным</string>
     <string name="ui_master_off">Выключено</string>
-    <string name="ui_master_on">Включено: когда звонит телефон, скажите «ало», чтобы ответить</string>
-    <string name="ui_master_title">Отвечать на звонки словом «ало»</string>
+    <string name="ui_master_on">Включено: когда звонит телефон, скажите %1$s, чтобы ответить</string>
+    <string name="ui_master_title">Отвечать на звонки голосом</string>
     <string name="ui_model_preparing">Модель речи готовится (первый запуск занимает несколько секунд)…</string>
     <string name="ui_no_events">Событий пока нет. Они появятся здесь, когда поступит звонок.</string>
     <string name="ui_not_listening">Не слушает</string>
     <string name="ui_not_xiaomi">Эти шаги для телефонов Xiaomi, Redmi и POCO. Этот телефон определяется как %1$s.</string>
-    <string name="ui_onboarding_intro">Эти разрешения нужны Alo Answer, чтобы отвечать на звонки, когда вы говорите «ало». Каждое используется только для того, что написано под ним.</string>
+    <string name="ui_onboarding_intro">Эти разрешения нужны Alo Answer, чтобы отвечать на звонки, когда вы говорите %1$s. Каждое используется только для того, что написано под ним.</string>
     <string name="ui_open_accessibility">Открыть спец. возможности</string>
     <string name="ui_open_app_info">О приложении</string>
     <string name="ui_open_dialer">Набор номера</string>
@@ -167,15 +166,15 @@
     <string name="ui_perm_title_notifications">Уведомления</string>
     <string name="ui_perm_title_overlay">Поверх других приложений</string>
     <string name="ui_perm_title_phone">Состояние телефона</string>
-    <string name="ui_perm_why_answer">Позволяет принять входящий звонок после того, как вы скажете «ало».</string>
-    <string name="ui_perm_why_mic">Слушает «ало» только пока звонит телефон (не дольше 30 секунд) или во время теста. Речь распознаётся офлайн на самом телефоне; у приложения нет доступа в интернет, и звук не сохраняется.</string>
+    <string name="ui_perm_why_answer">Позволяет принять входящий звонок после того, как вы скажете %1$s.</string>
+    <string name="ui_perm_why_mic">Слушает %1$s только пока звонит телефон (не дольше 30 секунд) или во время теста. Речь распознаётся офлайн на самом телефоне; у приложения нет доступа в интернет, и звук не сохраняется.</string>
     <string name="ui_perm_why_notifications">Android показывает уведомление, пока включён микрофон. Ещё приложение сообщает через уведомления, если голосовой ответ не запустился, и почему.</string>
     <string name="ui_perm_why_overlay">Android даёт приложению микрофон в фоне, только если прослушивание запущено, пока приложение на экране. Поэтому при звонке приложение меньше чем на секунду показывает невидимое окно, чтобы начать слушать. Для этого окна нужно это разрешение.</string>
     <string name="ui_perm_why_phone">Позволяет узнать, что телефон звонит, звонок принят или завершён. Номер звонящего не читается.</string>
     <string name="ui_permanently_denied">Раньше вы выбрали «Не разрешать», поэтому Android больше не спросит. Включите его в Настройки → Разрешения.</string>
     <string name="ui_permissions">Разрешения</string>
     <string name="ui_perms_missing">Не хватает некоторых разрешений</string>
-    <string name="ui_say_alo">Скажите «ало»</string>
+    <string name="ui_say_alo">Скажите %1$s</string>
     <string name="ui_sensitivity">Чувствительность: %1$s</string>
     <string name="ui_sensitivity_help">Выше: «ало» распознаётся легче, но чаще бывают ложные ответы. Ниже: меньше ошибок, но, возможно, придётся повторить. Применяется со следующего звонка или теста.</string>
     <string name="ui_setup_check">Проверка настройки</string>
@@ -214,7 +213,7 @@
     <string name="ui_step_overlay_title">Поверх других приложений: включено</string>
     <string name="ui_step_overlay_why">Разрешение Android, которое позволяет открыть окно прослушивания, пока звонит телефон.</string>
     <string name="ui_test_busy">Сейчас идёт входящий звонок. Попробуйте тест после него.</string>
-    <string name="ui_test_footnote">Слушает до 60 секунд и ни на что не отвечает. Во время настоящего звонка рядом с микрофоном играет мелодия, поэтому «ало» распознать сложнее, чем здесь. Попробуйте также с расстояния в метр-два.</string>
+    <string name="ui_test_footnote">Слушает до 60 секунд и ни на что не отвечает. Во время настоящего звонка рядом с микрофоном играет мелодия, поэтому слово для ответа распознать сложнее, чем здесь. Попробуйте также с расстояния в метр-два.</string>
     <string name="ui_test_listening">Тест прослушивания</string>
     <string name="ui_to_turn_on">Чтобы включить: %1$s</string>
     <string name="ui_xiaomi_failed">Не удалось открыть настройки. Пройдите по указанному пути.</string>
@@ -223,10 +222,10 @@
     <string name="ui_xiaomi_intro">HyperOS останавливает фоновые приложения гораздо жёстче обычного Android. Без этих настроек телефон может звонить, а ничего не произойдёт.</string>
     <string name="ui_xiaomi_setup">Настройка Xiaomi / Redmi</string>
     <plurals name="ui_heard_times">
-        <item quantity="one">Услышано «ало»: %d</item>
-        <item quantity="few">Услышано «ало»: %d</item>
-        <item quantity="many">Услышано «ало»: %d</item>
-        <item quantity="other">Услышано «ало»: %d</item>
+        <item quantity="one">Услышано: %d</item>
+        <item quantity="few">Услышано: %d</item>
+        <item quantity="many">Услышано: %d</item>
+        <item quantity="other">Услышано: %d</item>
     </plurals>
 
     <!-- ===== 2.1: one app language, phone app features, call screen ===== -->
@@ -241,7 +240,7 @@
     <string name="ui_level_very_high">Очень высокая</string>
     <string name="ui_sens_low_hint">Меньше ошибок</string>
     <string name="ui_sens_high_hint">Слышит легче</string>
-    <string name="ui_test_listening_sub">Проверьте, как хорошо слышно «ало»</string>
+    <string name="ui_test_listening_sub">Проверьте, как хорошо слышно ваше слово</string>
     <string name="ui_dialer_on_short">Alo Answer — приложение для звонков</string>
     <string name="ui_dialer_off_short">Сделайте Alo Answer приложением для звонков: ответ голосом работает надёжнее всего, а громкая связь включается сама. Вернуть прежнее можно в любой момент в настройках телефона.</string>
     <string name="ui_open_dialer_sub">Недавние, контакты и клавиатура</string>
@@ -321,4 +320,43 @@
         <item quantity="many">%d пропущенных звонков</item>
         <item quantity="other">%d пропущенного звонка</item>
     </plurals>
+
+    <!-- Answer words -->
+    <string name="dialer_voice_off">Выкл.</string>
+    <string name="dialer_voice_on_desc">Голосовой ответ включён: %1$s</string>
+    <string name="dialer_voice_off_desc">Голосовой ответ выключен</string>
+    <string name="dialer_voice_intro_on">Когда звонит телефон, скажите %1$s, и приложение само ответит. Слово можно выбрать самому: на узбекском, русском или английском.</string>
+    <string name="dialer_voice_intro_off">Когда звонит телефон, скажите %1$s, и приложение само ответит. Сейчас это выключено.</string>
+    <string name="dialer_voice_pick">Выбрать слово</string>
+    <string name="dialer_voice_turn_on">Включить</string>
+    <string name="dialer_voice_dismiss">Закрыть</string>
+    <string name="wake_lang_uz">Узбекский</string>
+    <string name="wake_lang_ru">Русский</string>
+    <string name="wake_lang_en">Английский</string>
+    <string name="ui_wake_multi_lang">Отмечены слова на разных языках: приложение слушает моделью каждого языка сразу, поэтому начинает чуть позже и тратит чуть больше батареи.</string>
+    <string name="ev_wake_word">«%1$s»</string>
+    <string name="ev_wake_word_detail">«%1$s» (%2$s)</string>
+    <string name="wake_quote">«%1$s»</string>
+    <string name="wake_or">%1$s или %2$s</string>
+    <string name="ui_wake_title">Слово для ответа</string>
+    <string name="ui_wake_intro">Когда звонит телефон, скажите любое отмеченное здесь слово, и приложение ответит. Отметьте готовые слова или добавьте свои на узбекском, русском или английском. Лучше всего одно-два слова: чем больше отмечено, тем чаще возможен ответ по ошибке.</string>
+    <string name="ui_wake_default">По умолчанию</string>
+    <string name="ui_wake_own">Свои слова</string>
+    <string name="ui_wake_add">Добавить слово или фразу</string>
+    <string name="ui_wake_add_sub">На узбекском, русском или английском, до %1$d слов</string>
+    <string name="ui_wake_add_hint">Например: %1$s</string>
+    <string name="ui_wake_add_help">Узбекские слова можно писать латиницей или кириллицей. Приложение проверит, что модель речи знает каждое слово: незнакомые слова она не слышит.</string>
+    <string name="ui_wake_add_btn">Добавить</string>
+    <string name="ui_wake_checking">Проверяю…</string>
+    <string name="ui_wake_unknown">Модель речи не знает: %1$s. Попробуйте другое написание или другое слово.</string>
+    <string name="ui_wake_check_failed">Не удалось проверить слово. Попробуйте ещё раз.</string>
+    <string name="ui_wake_short">Это слово очень короткое: приложение может ответить по ошибке, услышав что-то похожее. Чтобы всё равно добавить, нажмите «Добавить» ещё раз.</string>
+    <string name="ui_wake_too_long">Не больше %1$d слов.</string>
+    <string name="ui_wake_need_one">Хотя бы одно слово должно быть отмечено.</string>
+    <string name="ui_wake_delete">Удалить</string>
+    <string name="ui_wake_delete_q">Удалить %1$s?</string>
+    <string name="ui_wake_many">Отмечено много слов: ответов по ошибке может стать больше.</string>
+    <string name="ui_wake_applies">Применяется со следующего звонка или теста.</string>
+    <string name="ui_wake_limit">Можно добавить не больше %1$d слов.</string>
+    <string name="ui_last_heard">Последнее: %1$s</string>
 </resources>

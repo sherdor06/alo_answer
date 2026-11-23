@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import com.aloanswer.alo_answer.MainActivity
 import com.aloanswer.alo_answer.PermissionHelper
 import com.aloanswer.alo_answer.R
+import com.aloanswer.alo_answer.WakeWords
 import com.aloanswer.alo_answer.XiaomiIntents
 import com.aloanswer.alo_answer.dialer.dp
 
@@ -61,7 +62,7 @@ class OnboardingActivity : Screen() {
 
     private fun render() {
         content.removeAllViews()
-        content.addView(text(getString(R.string.ui_onboarding_intro), 16f), matchWrap().apply { bottomMargin = dp(16) })
+        content.addView(text(getString(R.string.ui_onboarding_intro, WakeWords.spoken(this)), 16f), matchWrap().apply { bottomMargin = dp(16) })
         val required = PermissionHelper.required(this)
         for (p in perms) permCard(p, needed = p.name in required)
         val all = required.all { status[it] == PermissionHelper.GRANTED }
@@ -99,7 +100,9 @@ class OnboardingActivity : Screen() {
             setColorFilter(if (granted) c.primary else c.outline)
         }, LinearLayout.LayoutParams(dp(24), dp(24)))
         v.addView(head)
-        v.addView(text(getString(p.why), 14.5f), matchWrap().apply { topMargin = dp(8) })
+        // These two texts name the answer words.
+        val why = if (p.name == "answer" || p.name == "mic") getString(p.why, WakeWords.spoken(this)) else getString(p.why)
+        v.addView(text(why, 14.5f), matchWrap().apply { topMargin = dp(8) })
         if (permanent) {
             v.addView(text(getString(R.string.ui_permanently_denied), 14f, c.error), matchWrap().apply { topMargin = dp(8) })
         }

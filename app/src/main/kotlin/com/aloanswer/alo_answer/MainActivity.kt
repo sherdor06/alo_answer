@@ -23,6 +23,7 @@ import com.aloanswer.alo_answer.ui.LanguagePicker
 import com.aloanswer.alo_answer.ui.OnboardingActivity
 import com.aloanswer.alo_answer.ui.Screen
 import com.aloanswer.alo_answer.ui.TestListenActivity
+import com.aloanswer.alo_answer.ui.WakeWordsActivity
 import com.aloanswer.alo_answer.ui.XiaomiSetupActivity
 import java.util.concurrent.Executors
 
@@ -64,13 +65,9 @@ class MainActivity : Screen() {
             finish()
             return
         }
-        // Copy the speech model out of the APK now, so the first call doesn't wait for it.
-        io.execute {
-            try {
-                if (ModelStore.assetPresent(applicationContext)) ModelStore.ensureReady(applicationContext)
-            } catch (_: Exception) {
-            }
-        }
+        // Copy the speech models of the ticked words out of the APK now, so the first call
+        // doesn't wait for it (and free the ones no ticked word needs).
+        ModelStore.prepareTicked(this)
         sensitivity = Settings.sensitivity(this)
         // Opened from the dial pad's menu: a back arrow returns there.
         scaffold(if (DialerRole.isDefault(this)) getString(R.string.dialer_settings) else "Alo Answer", back = !isTaskRoot)
@@ -98,7 +95,8 @@ class MainActivity : Screen() {
                 ModelStore.info(applicationContext)
             } catch (e: Exception) {
                 mapOf(
-                    "modelAsset" to ModelStore.assetPresent(applicationContext),
+                    "modelAsset" to WakeWords.languages(WakeWords.selected(applicationContext))
+                        .all { ModelStore.assetPresent(applicationContext, it) },
                     "modelReady" to false,
                     "modelError" to "${e.javaClass.simpleName}: ${e.message}",
                 )
@@ -182,7 +180,7 @@ class MainActivity : Screen() {
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         texts.addView(text(getString(R.string.ui_master_title), 17f, medium = true))
         val subtitle = if (canEnable || enabled) {
-            getString(if (enabled) R.string.ui_master_on else R.string.ui_master_off)
+            if (enabled) getString(R.string.ui_master_on, WakeWords.spoken(this)) else getString(R.string.ui_master_off)
         } else {
             getString(R.string.ui_to_turn_on, blockers.joinToString(", "))
         }
@@ -204,9 +202,13 @@ class MainActivity : Screen() {
         v.addView(row)
     }
 
-    /** Sensitivity (as words, not numbers) and the listening test. */
+    /** The answer words, sensitivity (as words, not numbers) and the listening test. */
     private fun voiceCard() {
         val v = listCard(getString(R.string.ui_voice_title))
+        listRow(v, R.drawable.ic_record_voice_over, getString(R.string.ui_wake_title), value = WakeWords.summary(this)) {
+            open(WakeWordsActivity::class.java)
+        }
+        rowDivider(v)
         val block = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(8), dp(20), dp(6))
@@ -389,7 +391,10 @@ class MainActivity : Screen() {
             row.addView(text(getString(R.string.ui_model_preparing)), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             v.addView(row)
         } else {
-            v.addView(check(getString(R.string.ui_check_model_asset), m["modelAsset"] == true))
+            val langs = (m["langs"] as? List<*>)?.mapNotNull { SpeechLang.of(it as? String) }
+                ?: WakeWords.languages(WakeWords.selected(this)).toList()
+            val names = langs.joinToString(", ") { WakeWords.languageName(this, it) }
+            v.addView(check(getString(R.string.ui_check_model_asset, names), m["modelAsset"] == true))
             v.addView(check(getString(R.string.ui_check_model_ready), m["modelReady"] == true))
             val words = (m["wakeWords"] as? List<*>)?.joinToString(", ").orEmpty()
             if (m["modelReady"] == true && words.isNotEmpty()) {

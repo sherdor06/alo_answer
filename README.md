@@ -1,11 +1,13 @@
 # Alo Answer
 
 Native Android app (Kotlin): when the phone rings, say **“alo”** (Uzbek “allo” /
-“a'lo”) and the call is answered. It then *tries* to switch the call to the
-loudspeaker (best effort, see below).
+“a'lo”), or another answer word you pick in Uzbek, Russian or English, and the
+call is answered. It then *tries* to switch the call to the loudspeaker (best
+effort, see below).
 
 Speech is recognized **offline** by [Vosk](https://alphacephei.com/vosk/) with
-its Uzbek model: no account, no key, and the app has no internet permission.
+its Uzbek, Russian and English models: no account, no key, and the app has no
+internet permission.
 
 Since 2.0.0 the whole app is native Kotlin: the screens are plain Android
 framework views (no Flutter, no AndroidX), next to the call-state handling,
@@ -17,8 +19,8 @@ backup in `../alo_answer_flutter_backup`.
 
 | Path | What |
 |---|---|
-| `app/src/main/kotlin/com/aloanswer/alo_answer/` | Call handling: `CallStateReceiver`, `ArmActivity`, `WakeWordService`, `ModelStore`, `WakeMatcher`, `SpeakerRouter`, `SpeakerClickService`, `Settings`, `EventLog`, `PermissionHelper`, `XiaomiIntents`; `MainActivity` (home screen) |
-| `…/ui/` | The other screens: `OnboardingActivity` (permissions), `TestListenActivity`, `EventLogActivity`, `XiaomiSetupActivity`, and `Screen.kt` (shared top bar, cards, buttons) |
+| `app/src/main/kotlin/com/aloanswer/alo_answer/` | Call handling: `CallStateReceiver`, `ArmActivity`, `WakeWordService`, `ModelStore`, `SpeechLang`, `WakeWords`, `WakeMatcher`, `MicListener`, `SpeakerRouter`, `SpeakerClickService`, `Settings`, `EventLog`, `PermissionHelper`, `XiaomiIntents`; `MainActivity` (home screen) |
+| `…/ui/` | The other screens: `OnboardingActivity` (permissions), `WakeWordsActivity` (answer words), `TestListenActivity`, `EventLogActivity`, `XiaomiSetupActivity`, and `Screen.kt` (shared top bar, cards, buttons) |
 | `…/dialer/` | Default phone app mode: `AloInCallService`, `CallManager`, `InCallActivity`, `DialerActivity`, `CallNotifications`, `PhoneData` |
 | `app/src/main/res/values{,-uz,-ru}/strings.xml` | All texts in English, Uzbek and Russian |
 | `app/src/main/assets/model-uz/` | Vosk Uzbek model |
@@ -36,8 +38,8 @@ ArmActivity.kt — invisible screen, shown for well under a second (over the loc
    │ starts the service while the app is visible, then closes
    ▼
 WakeWordService.kt — foreground service, type=microphone
-   │ loads the Uzbek Vosk model (~1 s), listens only for “allo” / “a'lo”
-   │ “allo” heard                 │ OFFHOOK / IDLE / 30 s timeout / error
+   │ loads the Vosk model of each ticked word's language (~1 s), listens for the answer words
+   │ answer word heard            │ OFFHOOK / IDLE / 30 s timeout / error
    ▼                              ▼
 mic released → TelecomManager.acceptRingingCall()     mic released, service stops
    ▼
@@ -110,7 +112,8 @@ package `…alo_answer.dialer`):
   when nothing is connected. In normal mode (not the default phone app),
   auto speaker works as before.
 - `InCallActivity`: the call screen, which also shows over the lock screen.
-  - Incoming: Decline / Answer, plus the “Listening for ‘allo’…” chip.
+  - Incoming: Decline / Answer, plus the “Listening for ‘alo’…” chip, which
+    names the ticked answer words.
   - Ongoing: timer, Mute / Keypad (DTMF) / Speaker / Hold / End.
   - Audio output: with no Bluetooth device, the button is a plain Speaker
     on/off. With a Bluetooth device that can take calls, it becomes an audio
@@ -159,6 +162,23 @@ app):
   - Searching “dil” filtered the contacts.
   - An incoming call from a saved number showed the contact name.
 
+**Added in 2.2** (verified on the emulator):
+- **Answer word** (Settings → Voice answer → Answer word): tick ready-made
+  words in Uzbek, Russian or English, or add your own word or phrase in any
+  of the three. Any ticked one answers. Russian and English have their own
+  Vosk models. See [Answer words](#answer-words).
+- **Seen on the dial pad**, the screen the app opens on:
+  - A 🎙 «alo» chip in the top bar, on every tab, shows that voice answer
+    is on and with which words. Tap it to change them. When voice answer is
+    off, it says Off and opens the settings to turn it on.
+  - Above the keypad, a card explains the feature once, with “Pick the word”
+    (or “Turn on”). Closing it, using it, or opening the answer word screen
+    any other way hides it for good.
+  - ⋮ → Answer word opens the screen directly.
+- The notification, call screen, permissions and test screens name the
+  ticked words. The test screen and the event log show which one was heard
+  and how sure the recognizer was, for example «alo» (allo, 61%).
+
 **Added in 2.1** (verified on the emulator):
 - The app icon opens the dial pad (as the default phone app); settings via ⋮.
 - Dial pad: smart dial (contacts by T9 name, Latin and Cyrillic, or number),
@@ -183,22 +203,121 @@ Accessibility code).
 | | |
 |---|---|
 | Engine | `com.alphacephei:vosk-android:0.3.75` (Apache 2.0). It brings in `net.java.dev.jna:jna` automatically. |
-| Model | `vosk-model-small-uz-0.22` (Apache 2.0), from alphacephei.com/vosk/models. 51 MB zip, ~102 MB unpacked. |
-| Where | `app/src/main/assets/model-uz/`. Copied to internal storage on first start and again after every app update (`ModelStore.kt`). |
-| Words | `allo` and `a'lo`. Both are in the model's vocabulary; plain `alo` is not. Both sound like “alo”. |
-| Mode | **Grammar mode**: the model has `graph/Gr.fst` + `HCLr.fst`, so the recognizer is limited to `["allo", "a'lo", "[unk]"]`. Anything else comes out as `[unk]`. |
+| Models | All small Vosk models, Apache 2.0, from alphacephei.com/vosk/models. Uzbek `vosk-model-small-uz-0.22`: 49 MB zip, ~102 MB unpacked, 244,261 words. Russian `vosk-model-small-ru-0.22`: 45 MB, 87 MB, 250,004 words. English `vosk-model-small-en-us-0.15`: 40 MB, 68 MB, 152,217 words. |
+| Where | `app/src/main/assets/model-uz/`, `model-ru/`, `model-en/`. A model is copied to internal storage once a ticked word needs it, again after every app update, and deleted when no ticked word needs it (`ModelStore.kt`). |
+| Words | The ticked answer words (`WakeWords.kt`). By default “alo”, which listens for `allo` and `a'lo`. |
+| Mode | **Grammar mode** (each model has `graph/Gr.fst` + `HCLr.fst`): per language, the ticked words of that language, 120–145 everyday filler words (see below) and `[unk]`. Only the ticked words answer. |
+| Microphone | `MicListener.kt`: one `AudioRecord` feeds the recognizer of every ticked language. It records like Vosk's `SpeechService`: VOICE_RECOGNITION, 16 kHz mono, 0.2 s reads. |
 
 How a hit is decided (`WakeMatcher.kt`):
-- **Final result:** the word appears with confidence `conf ≥ 0.85 − 0.75 × sensitivity`.
-  The default sensitivity is 0.5, which needs conf ≥ 0.475.
-- **Or partial results:** the word stays in the partial hypothesis for
+- **Final result:** the phrase's words appear in a row with an average
+  confidence `conf ≥ 0.85 − 0.75 × sensitivity`. The default sensitivity is
+  0.5, which needs conf ≥ 0.475.
+- **Or partial results:** the phrase stays in the partial hypothesis for
   `2 + round((1 − sensitivity) × 4)` updates in a row (~0.2 s each; 4 at the
   default). This matters during a call, where the ringtone can keep an
   utterance “open” and delay the final result.
 
-To use a different language (e.g. `vosk-model-small-ru-0.22`, Russian “алло”):
-replace `assets/model-uz`, then update `ModelStore.ASSET_DIR` and
-`ModelStore.WAKE_WORDS`. The words must be in the new model's vocabulary.
+To add a language: put its small Vosk model in `assets/model-xx`, add it to
+`SpeechLang`, then give it ready-made words and filler words in `WakeWords`.
+All of them must be in the model's vocabulary.
+
+### Answer words
+
+Settings → Voice answer → **Answer word**. Any number can be ticked, at least
+one; one or two work best.
+
+- **Ready-made** (picked with the tests below):
+  - Uzbek: Alo (default), Labbay, Eshitaman, Assalomu alaykum, Marhamat,
+    Javob ber.
+  - Russian: Алло, Слушаю, Говорите, Здравствуйте.
+  - English: Hello, Answer, Speaking.
+- **Your own:** pick the language, then type a word or a phrase of up to 4
+  words, at most 10 of them.
+  - **Spelling:** the app writes what you type the way the model spells it:
+    lowercase. Uzbek Cyrillic turns into Latin (`келинг` → `keling`,
+    `ер` → `yer`) and any apostrophe mark (ʻ ’ ‘ ʼ \`) into `'`. A Russian
+    `е` also finds the model's `ё` (`еще` → `ещё`). English keeps `'`
+    (`don’t` → `don't`).
+  - **Already listed:** a word that is ready-made already, such as “labbay”,
+    or a sound-alike of one (“allo” for Alo), just ticks that one.
+  - **Unknown words:** a model recognizes only words of its vocabulary. Vosk
+    drops any other word from the grammar, with only a warning in its log.
+    So the app checks every word first and says which ones it doesn't know.
+  - **Short words:** a one-syllable word (“ha”, “да”, “yes”) gets a warning
+    that it may answer by mistake, and needs a second tap on Add.
+- **Models on the phone:** a language's model is copied out of the APK in
+  the background as soon as one of its words is ticked, and deleted when none
+  is.
+- **Several languages:** each ticked language runs its own recognizer on the
+  same microphone. On the emulator, listening started 1.0 s after the ring
+  with Uzbek only and 1.4 s with all three languages.
+- **Vocabulary check:** the vocabulary is the output symbol table at the
+  start of `graph/Gr.fst`. Vosk reads its words from there when the model has
+  no `graph/words.txt` (its `model.cc`). `ModelStore.resolveWords` reads the
+  same table straight from the APK, so nothing has to be copied first; it
+  takes 0.1–0.2 s on the emulator.
+- **Filler words:** with only the answer words and `[unk]` in a grammar, the
+  recognizer has to put every sound somewhere. The Russian model put most
+  unrelated sentences on “алло”. So each grammar also gets 120–145 everyday
+  words of its language (`WakeWords.FILLERS`). Other speech lands on them,
+  and they never answer. Fillers that sound like a ready-made word are left
+  out: with `havo` in the list, Russian-voiced “Алло” came out as `havo` and
+  stopped answering as Alo.
+- **Correction:** earlier versions of this README said plain `alo` is not in
+  the Uzbek vocabulary. It is: that check ran `strings` on `Gr.fst`, which
+  glues a word to the bytes of its number. The behavior stays as it was,
+  because adding `alo` next to `allo` and `a'lo` made “alo” clips score
+  about 0.2 lower (the recognizer splits its confidence between sound-alikes).
+
+**How the ready-made words were picked** (emulator, sensitivity 0.5). macOS
+voices recorded each word: for Uzbek a Turkish voice with Latin text plus
+Russian and Kazakh voices with Cyrillic text (there is no Uzbek voice); for
+Russian the Russian and Kazakh voices; for English British, US and Indian
+voices. Each clip was used clean and with a ringtone at 6 dB and 0 dB. One
+word at a time was ticked and run against unrelated sentences in the same
+three conditions, through the app's own recognizers and `WakeMatcher` (debug
+hook). Some sentences were picked to sound like an answer word.
+
+| Word | Caught | Answered by mistake, without fillers | … with fillers |
+|---|---|---|---|
+| alo (`allo`, `a'lo`) | 7 of 9 | 6 of 81: “Allohga shukur”, “hammasi a'lo” | 6 of 81 (the same) |
+| labbay | 9 of 9 | 1 of 81 (ringtone as loud as the voice) | 0 |
+| eshitaman | 9 of 9 | 4 of 81: “eshik ochiq qoldi”, … | 0 |
+| assalomu alaykum | 9 of 9 | 0 | 0 |
+| marhamat | 9 of 9 | 0 (not even on “rahmat”) | 0 |
+| javob ber | 6 of 9 (missed with the Turkish voice) | 0 | 0 |
+| алло | 6 of 6 | 22 of 72 | 4 of 72: “Allohga shukur”, “Hold on a second” |
+| слушаю | 6 of 6 | 8 of 72 | 0 |
+| говорите | 6 of 6 | 13 of 72 | 0 |
+| здравствуйте | 6 of 6 | 6 of 72 | 0 |
+| hello | 6 of 9 (missed with the Indian voice) | 8 of 72 | 2 of 72 |
+| answer | 9 of 9 | 0 | 0 |
+| speaking | 9 of 9; 7 of 9 with fillers | 0 | 0 |
+| *left out:* gapiring | 9 of 9 | 3 of 81: “keling, kiring” | 2 of 45 fresh: “gapirdi” |
+| *left out:* buyuring | 9 of 9 | 4 of 81: “keling”, “o'tiring” | 0 |
+| *left out:* да, yes | all | 37 and 6 of 72 | 3 and 3 of 72 |
+| *left out:* pick up | 6 of 9 | 1 of 72 | 3 of 72: “pick it up” |
+
+Some filler words come from these test sentences (“eshik”, “keling”,
+“слушай”, “алла”…), which flatters the last column. So the words were also
+run against 15 fresh sentences that played no part in choosing the fillers
+(45 clips), some again picked to sound alike (“аллея”, “слушайте”,
+“говорил”, “Javohir”, “marhum”, “answering”, “allow me”):
+- No mistakes: alo, labbay, eshitaman, assalomu alaykum, marhamat, слушаю,
+  говорите, answer, speaking, buyuring.
+- One mistake each: javob ber (“Javohir”), алло (“аллея”), здравствуйте,
+  hello. Two: gapiring (“gapirdi”), so it stays left out.
+
+With all 13 ready-made words ticked at once (three recognizers on the same
+audio):
+- 98 of 105 word clips were caught.
+- 23 of 273 other clips (8%) answered by mistake. Most were “alo” or “алло”
+  on “Alloh…”, “Аллея”, “Алла” and “Hold on”. That's why one or two words
+  work best.
+
+TTS voices are not real Uzbek, Russian or English speakers, so the real check
+is on the phone.
 
 ---
 
@@ -215,9 +334,11 @@ gives `app/build/outputs/apk/debug/app-debug.apk` (debug key, with the test
 hook).
 
 - **Version:** `versionCode` / `versionName` in `app/build.gradle.kts`
-  (2.0.0 = 2007, 2.0.1 = 2008). Raise `versionCode` for every build you
+  (2.0.0 = 2007, 2.0.1 = 2008, 2.1.0 = 2009, 2.2.0 = 2010). Raise `versionCode` for every build you
   install over an older one. The Flutter builds used 2000 + build number (up
   to 2006), so 2.0.0 and later install over them with the same key.
+- **Size:** the release APK is about 150 MB, most of it the three speech
+  models (49 + 45 + 40 MB zipped).
 - **arm64-v8a only** (`abiFilters` in `app/build.gradle.kts`), which covers
   every current Redmi. Add `"armeabi-v7a"` for old 32-bit phones or
   `"x86_64"` for an Intel-Mac emulator; each adds its own copy of Vosk.
@@ -296,16 +417,18 @@ and says so. Menu names also differ between versions.
 2. Check that **Setup check** shows the model as ready and lists the words
    it listens for. The first start copies the model, which takes a few
    seconds.
-3. **Test listening** (no call needed): say “allo” / “alo”. The circle
-   flashes green and the counter goes up. Tune the sensitivity here. Test mode
-   uses the same service, model and rules as a call, but never answers
-   anything and stops after 60 seconds or when you leave the screen.
-4. Turn on **Answer calls by saying “alo”**.
+3. **Test listening** (no call needed): say your answer word (“allo” / “alo”
+   by default). The circle flashes green, the counter goes up, and the line
+   under it shows the word heard and the confidence. Tune the sensitivity
+   here. Test mode uses the same service, model and rules as a call, but
+   never answers anything and stops after 60 seconds or when you leave the
+   screen.
+4. Turn on **Answer calls by voice**.
 5. **Real call:** call the phone from another phone, once while it's locked
    and once while it's unlocked. While it rings, the **“Say ‘alo’ to answer”**
-   notification means the mic is open. Say “allo”.
+   notification means the mic is open. Say the answer word.
 6. Open the **Event log**. A working run looks like this:
-   Ring detected → Listening → Wake word heard → Answer requested →
+   Ring detected → Listening → Answer word heard → Answer requested →
    Call answered → Speaker: …
 7. Logcat:
 
@@ -321,7 +444,7 @@ and says so. Menu names also differ between versions.
 | Nothing at all on a call | Master switch off, or Autostart / battery restrictions stop the receiver |
 | Ring detected, then **Blocked by Android** | Display over other apps, Xiaomi pop-up windows, or Show on Lock screen is off |
 | **Error** speech model missing / failed to start | The model folder is missing or broken: rebuild with `assets/model-uz` |
-| Listening → **Timed out** | “allo” wasn't recognized within 30 s. Raise the sensitivity, lower the ringtone volume, speak closer |
+| Listening → **Timed out** | The answer word wasn't recognized within 30 s. Raise the sensitivity, lower the ringtone volume, speak closer, or tick another word |
 | **Answer failed** | Answer-calls permission missing, or the ROM refused |
 
 The ringtone plays right next to the microphone, which lowers recognition
@@ -329,9 +452,10 @@ confidence (see the results below). A lower ringtone volume helps.
 
 ### Verified so far (emulator, SDK 37)
 
-**Recognition**, using the app's real Vosk model, grammar and `WakeMatcher`,
-fed from recordings through the debug hook. The recordings are macOS
-text-to-speech voices; no Uzbek voice is available.
+**Recognition of “alo”**, using the app's real Vosk model, grammar and
+`WakeMatcher`, fed from recordings through the debug hook. The recordings are
+macOS text-to-speech voices; no Uzbek voice is available. The other answer
+words: see [Answer words](#answer-words).
 
 | Recording | Clean | + ringtone 6 dB | + ringtone 0 dB |
 |---|---|---|---|
@@ -403,7 +527,13 @@ adb shell am broadcast -n $R -a $P.debug.SAY_ALO
 adb push test.pcm /data/local/tmp/
 adb shell "cat /data/local/tmp/test.pcm | run-as $P sh -c 'cat > files/test.pcm'"
 adb shell am broadcast -n $R -a $P.debug.RECOGNIZE_PCM --es file test.pcm
-adb logcat -s AloAnswer        # → "test.pcm: wake word DETECTED / not detected"
+adb logcat -s AloAnswer        # → "test.pcm: wake word DETECTED alo heard=allo conf=0,61 / not detected"
+# Several files at once (the models load once), other words than the ticked
+# ones (ready-made ids or any phrase, | between them, "ru:" / "en:" in front for
+# those languages), another sensitivity, and the grammar without filler words:
+adb shell am broadcast -n $R -a $P.debug.RECOGNIZE_PCM --es file "a.pcm|b.pcm" --es words "alo|ru:слушаю|en:answer" --ef sensitivity 0.5 --ez fillers false
+# Check words against a model's vocabulary, as "Add a word" does (lang uz, ru or en):
+adb shell am broadcast -n $R -a $P.debug.CHECK_WORDS --es lang ru --es words "слушаю|еще"
 # Turn the stand-in detector off afterwards.
 adb shell am broadcast -n $R -a $P.debug.FAKE_DETECTOR --ez on false
 # Pretend Bluetooth headset "Demo Buds" in the call screen's audio picker

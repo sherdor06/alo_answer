@@ -15,11 +15,12 @@ import android.widget.TextView
 import com.aloanswer.alo_answer.EventLog
 import com.aloanswer.alo_answer.R
 import com.aloanswer.alo_answer.WakeWordService
+import com.aloanswer.alo_answer.WakeWords
 import com.aloanswer.alo_answer.dialer.circle
 import com.aloanswer.alo_answer.dialer.dp
 
 /**
- * Listens for the wake word right now, with no call, and flashes on each hit.
+ * Listens for the answer words right now, with no call, and flashes on each hit.
  * Same service, model and rules as a real call, but it never answers anything.
  */
 class TestListenActivity : Screen() {
@@ -30,11 +31,14 @@ class TestListenActivity : Screen() {
     private var flash = false
     private var hits = 0
     private var error: String? = null
+    /** The last hit as the event log words it: «labbay» (92%). */
+    private var lastHeard: String? = null
 
     private lateinit var ring: FrameLayout
     private lateinit var icon: ImageView
     private lateinit var statusView: TextView
     private lateinit var hitsView: TextView
+    private lateinit var lastView: TextView
     private lateinit var errorView: TextView
     private lateinit var againButton: View
 
@@ -58,6 +62,8 @@ class TestListenActivity : Screen() {
         content.addView(statusView, matchWrap().apply { topMargin = dp(24) })
         hitsView = text("", 17f, c.dim).apply { gravity = Gravity.CENTER }
         content.addView(hitsView, matchWrap().apply { topMargin = dp(8) })
+        lastView = text("", 15f, c.dim).apply { gravity = Gravity.CENTER }
+        content.addView(lastView, matchWrap().apply { topMargin = dp(4) })
         errorView = text("", 15f, c.error).apply { gravity = Gravity.CENTER }
         content.addView(errorView, matchWrap().apply { topMargin = dp(16) })
         againButton = button(getString(R.string.ui_start_again), Btn.FILLED) { start() }
@@ -110,6 +116,7 @@ class TestListenActivity : Screen() {
             }
             EventLog.TEST_HIT -> {
                 hits++
+                lastHeard = msg
                 flash = true
                 handler.removeCallbacks(unflash)
                 handler.postDelayed(unflash, 700)
@@ -147,14 +154,14 @@ class TestListenActivity : Screen() {
             }
         )
         icon.setColorFilter(if (flash) Color.WHITE else c.onPrimaryContainer)
-        statusView.text = getString(
-            when {
-                starting -> R.string.ui_starting
-                listening -> R.string.ui_say_alo
-                else -> R.string.ui_not_listening
-            }
-        )
+        statusView.text = when {
+            starting -> getString(R.string.ui_starting)
+            listening -> getString(R.string.ui_say_alo, WakeWords.spoken(this))
+            else -> getString(R.string.ui_not_listening)
+        }
         hitsView.text = resources.getQuantityString(R.plurals.ui_heard_times, hits, hits)
+        lastView.text = lastHeard?.let { getString(R.string.ui_last_heard, it) }.orEmpty()
+        lastView.visibility = if (lastHeard == null) View.GONE else View.VISIBLE
         errorView.text = error.orEmpty()
         errorView.visibility = if (error.isNullOrEmpty()) View.GONE else View.VISIBLE
         againButton.visibility = if (!listening && !starting) View.VISIBLE else View.GONE

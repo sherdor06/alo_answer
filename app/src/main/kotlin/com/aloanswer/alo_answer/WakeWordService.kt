@@ -17,14 +17,13 @@ import android.os.Looper
 import android.telecom.TelecomManager
 import android.telephony.TelephonyManager
 import com.aloanswer.alo_answer.dialer.CallManager
-import org.vosk.android.RecognitionListener
-import org.vosk.android.SpeechService
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
+import kotlin.math.roundToInt
 
 /**
- * Microphone foreground service running the offline Vosk recognizer
- * (Uzbek model, no account or key, no internet).
+ * Microphone foreground service running the offline Vosk recognizers
+ * (Uzbek, Russian and English models, no account or key, no internet).
  *
  * Modes:
  *  - ARM:  started by ArmActivity while the phone rings. On wake word ->
@@ -38,8 +37,9 @@ import java.util.concurrent.RejectedExecutionException
  * explicit stop, error, or onDestroy. Never left open.
  *
  * Loading the model and creating/stopping the recognizer run on a single
- * worker thread; all state lives on the main thread, where Vosk's
- * SpeechService also delivers its callbacks.
+ * worker thread; all state lives on the main thread, where MicListener
+ * also delivers its callbacks. One recognizer runs per language of the
+ * ticked answer words, all fed from the same microphone.
  */
 class WakeWordService : Service() {
 
@@ -73,12 +73,11 @@ class WakeWordService : Service() {
 
     private enum class Mode { ARM, TEST }
 
-    /** Everything Vosk holds natively for one listening session. */
-    private class Session(val opened: ModelStore.Opened, val speech: SpeechService) {
+    /** Everything Vosk holds natively for one listening session, and the microphone. */
+    private class Session(val opened: ModelStore.Opened, val mic: MicListener) {
         fun release() {
-            try { speech.stop() } catch (_: Exception) {}     // joins the audio thread
-            try { speech.shutdown() } catch (_: Exception) {} // releases AudioRecord
-            opened.close()                                    // recognizer + model
+            try { mic.shutdown() } catch (_: Exception) {} // joins the audio thread, releases AudioRecord
+            opened.close()                                 // recognizers + models
         }
     }
 
@@ -176,7 +175,12 @@ class WakeWordService : Service() {
         )
         val n = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_mic)
-            .setContentTitle(str(if (forMode == Mode.ARM) R.string.notif_listen_title_call else R.string.notif_listen_title_test))
+            .setContentTitle(
+                str(
+                    if (forMode == Mode.ARM) R.string.notif_listen_title_call else R.string.notif_listen_title_test,
+                    WakeWords.spoken(this)
+                )
+            )
             .setContentText(str(R.string.notif_listen_text))
             .setOngoing(true)
             .addAction(
@@ -212,29 +216,31 @@ class WakeWordService : Service() {
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             fail(EventLog.ERROR, m(R.string.ev_no_mic_perm)); shutdown(); return
         }
-        if (!ModelStore.assetPresent(this)) {
-            fail(EventLog.ERROR, m(R.string.ev_missing_model, ModelStore.ASSET_DIR)); shutdown(); return
-        }
         val sensitivity = Settings.sensitivity(this)
+        val phrases = WakeWords.selected(this)
+        phrases.map { it.lang }.firstOrNull { !ModelStore.assetPresent(this, it) }?.let { lang ->
+            fail(EventLog.ERROR, m(R.string.ev_missing_model, lang.assetDir)); shutdown(); return
+        }
         val gen = ++generation
         initializing = true
 
         onWorker {
             var opened: ModelStore.Opened? = null
             try {
-                opened = ModelStore.open(applicationContext) // copies the model the first time, then loads it
-                val speech = SpeechService(opened.recognizer, ModelStore.SAMPLE_RATE) // VOICE_RECOGNITION mic source
-                val s = Session(opened, speech)
-                val matcher = WakeMatcher(opened.words, sensitivity)
+                // One model per language of the ticked words (copied the first time, then loaded).
+                opened = ModelStore.open(applicationContext, phrases)
+                val mic = MicListener(opened.parts.map { it.recognizer }, ModelStore.SAMPLE_RATE)
+                val s = Session(opened, mic)
+                val matchers = opened.parts.map { WakeMatcher(it.phrases, sensitivity) }
                 handler.post {
                     initializing = false
                     if (gen != generation) {
                         onWorker { s.release() } // session was cancelled while we were starting
                         return@post
                     }
-                    if (!speech.startListening(listener(gen, matcher))) {
+                    if (!mic.start(listener(gen, matchers))) {
                         onWorker { s.release() }
-                        fail(EventLog.ERROR, m(R.string.ev_detector_init, "startListening() returned false"))
+                        fail(EventLog.ERROR, m(R.string.ev_detector_init, "MicListener.start() returned false"))
                         shutdown()
                         return@post
                     }
@@ -254,27 +260,21 @@ class WakeWordService : Service() {
         }
     }
 
-    /** Vosk delivers these on the main thread. */
-    private fun listener(gen: Int, matcher: WakeMatcher) = object : RecognitionListener {
-        override fun onPartialResult(hypothesis: String?) {
-            if (gen == generation && matcher.onPartial(hypothesis)) onWakeWord()
+    /** MicListener delivers these on the main thread; [index] is the language's recognizer. */
+    private fun listener(gen: Int, matchers: List<WakeMatcher>) = object : MicListener.Callback {
+        override fun onPartial(index: Int, json: String) {
+            if (gen == generation) matchers[index].onPartial(json)?.let { onWakeWord(it) }
         }
 
-        override fun onResult(hypothesis: String?) {
-            if (gen == generation && matcher.onFinal(hypothesis)) onWakeWord()
+        override fun onResult(index: Int, json: String) {
+            if (gen == generation) matchers[index].onFinal(json)?.let { onWakeWord(it) }
         }
 
-        override fun onFinalResult(hypothesis: String?) {
-            if (gen == generation && matcher.onFinal(hypothesis)) onWakeWord()
-        }
-
-        override fun onError(exception: Exception?) {
+        override fun onError(e: Exception) {
             if (gen != generation) return
-            fail(EventLog.ERROR, m(R.string.ev_detector_error, "${exception?.javaClass?.simpleName}: ${exception?.message}"))
+            fail(EventLog.ERROR, m(R.string.ev_detector_error, "${e.javaClass.simpleName}: ${e.message}"))
             shutdown()
         }
-
-        override fun onTimeout() = Unit // we use our own timeout
     }
 
     private fun logListening() {
@@ -287,14 +287,24 @@ class WakeWordService : Service() {
         }
     }
 
-    private fun onWakeWord() {
+    /** «alo» (allo, 61%): the phrase, plus what the recognizer actually heard and how sure it was. */
+    private fun wakeMsg(hit: WakeMatcher.Hit): EventLog.Msg {
+        val detail = listOfNotNull(
+            hit.heard.takeIf { it != hit.phrase.label },
+            hit.conf?.let { "${(it * 100).roundToInt()}%" },
+        ).joinToString(", ")
+        return if (detail.isEmpty()) m(R.string.ev_wake_word, hit.phrase.label)
+        else m(R.string.ev_wake_word_detail, hit.phrase.label, detail)
+    }
+
+    private fun onWakeWord(hit: WakeMatcher.Hit) {
         when (mode) {
-            Mode.TEST -> EventLog.add(this, EventLog.TEST_HIT, m(R.string.ev_wake_test), persist = false)
+            Mode.TEST -> EventLog.add(this, EventLog.TEST_HIT, wakeMsg(hit), persist = false)
             Mode.ARM -> {
                 if (answering) return
                 answering = true
                 handler.removeCallbacks(timeout)
-                EventLog.add(this, EventLog.WAKE, m(R.string.ev_wake))
+                EventLog.add(this, EventLog.WAKE, wakeMsg(hit))
                 // Free the mic first, then answer.
                 val s = session
                 session = null
@@ -421,7 +431,7 @@ class WakeWordService : Service() {
     fun debugSimulateWake(): Boolean {
         if (!Settings.isDebuggable(this)) return false
         if (mode == null || (session == null && !fakeDetector)) return false
-        onWakeWord()
+        onWakeWord(WakeMatcher.Hit(WakeWords.selected(this).first(), "debug", null))
         return true
     }
 

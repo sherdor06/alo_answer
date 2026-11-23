@@ -133,6 +133,10 @@ object EventLog {
         return out.joinToString(" ")
     }
 
+    /** The first argument of the event's first message part (for a WAKE event: the phrase heard). */
+    fun firstArg(event: Map<String, Any>): String? =
+        (event["parts"] as? JSONArray)?.optJSONObject(0)?.optJSONArray("args")?.optString(0)?.takeIf { it.isNotEmpty() }
+
     fun clear(ctx: Context) = synchronized(lock) {
         ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
             .edit().remove(KEY).apply()

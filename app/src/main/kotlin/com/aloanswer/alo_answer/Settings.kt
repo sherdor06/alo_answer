@@ -131,6 +131,14 @@ object Settings {
         prefs(ctx).edit().putBoolean(KEY_INCOMING_ACTIVE, v).commit()
     }
 
+    private const val KEY_VOICE_INTRO_SEEN = "voice_intro_seen"
+
+    /** The dial pad's card that introduces voice answer was closed or used, or the answer word screen was opened. */
+    fun voiceIntroSeen(ctx: Context) = prefs(ctx).getBoolean(KEY_VOICE_INTRO_SEEN, false)
+    fun setVoiceIntroSeen(ctx: Context) {
+        prefs(ctx).edit().putBoolean(KEY_VOICE_INTRO_SEEN, true).apply()
+    }
+
     fun lastSpeakerResult(ctx: Context) = prefs(ctx).getString(KEY_LAST_SPEAKER, "") ?: ""
     fun setLastSpeakerResult(ctx: Context, s: String) {
         prefs(ctx).edit().putString(KEY_LAST_SPEAKER, s).apply()

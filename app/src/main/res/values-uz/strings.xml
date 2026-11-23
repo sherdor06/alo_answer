@@ -6,8 +6,8 @@
     <string name="notif_problem_title">Ovozli javob ishga tushmadi</string>
     <string name="notif_listen_channel">Tinglash</string>
     <string name="notif_listen_channel_desc">Mikrofon ochiq boʻlganda koʻrsatiladi</string>
-    <string name="notif_listen_title_call">Javob berish uchun «alo» deng</string>
-    <string name="notif_listen_title_test">Sinov: «alo» tinglanmoqda</string>
+    <string name="notif_listen_title_call">Javob berish uchun %1$s deng</string>
+    <string name="notif_listen_title_test">Sinov: %1$s tinglanmoqda</string>
     <string name="notif_listen_text">Mikrofon ochiq</string>
     <string name="notif_action_stop">Toʻxtatish</string>
 
@@ -15,13 +15,12 @@
     <string name="ev_offhook">Qoʻngʻiroqqa javob berildi</string>
     <string name="ev_missed">Jiringlash toʻxtadi (javobsiz yoki rad etilgan)</string>
     <string name="ev_call_ended">Qoʻngʻiroq tugadi</string>
-    <string name="ev_listening_call">«Alo» tinglanmoqda (qoʻngʻiroq jiringlamoqda)</string>
+    <string name="ev_listening_call">Javob soʻzi tinglanmoqda (qoʻngʻiroq jiringlamoqda)</string>
     <string name="ev_listening_test">Sinov tinglash boshlandi</string>
     <string name="ev_wake">«Alo» eshitildi</string>
-    <string name="ev_wake_test">«Alo» eshitildi (sinov)</string>
     <string name="ev_answer_requested">acceptRingingCall() chaqirildi; javob kutilmoqda</string>
     <string name="ev_answer_no_perm">Qoʻngʻiroqqa javob berish ruxsati yoʻq</string>
-    <string name="ev_timeout">Belgilangan vaqtda «alo» eshitilmadi; mikrofon oʻchirildi</string>
+    <string name="ev_timeout">Belgilangan vaqtda javob soʻzi eshitilmadi; mikrofon oʻchirildi</string>
     <string name="ev_stopped">Tinglash toʻxtatildi</string>
     <string name="ev_not_ringing">Tinglash boshlanguncha jiringlash toʻxtadi</string>
     <string name="ev_call_state">Qoʻngʻiroq holati: %1$s; mikrofon oʻchirildi</string>
@@ -39,7 +38,7 @@
     <string name="err_start_listening">Tinglashni boshlab boʻlmadi: %1$s</string>
 
     <string name="a11y_label">Alo Answer: karnay</string>
-    <string name="a11y_description">Siz «alo» deganingiz uchun Alo Answer qoʻngʻiroqqa javob bergandan keyin, bu xizmat qoʻngʻiroq ekranidagi «Karnay» tugmasini bosadi — qoʻl tegizmasdan gaplashishingiz uchun. Boshqa paytda hech narsa qilmaydi va hech narsani saqlamaydi.</string>
+    <string name="a11y_description">Siz javob soʻzini aytganingiz uchun Alo Answer qoʻngʻiroqqa javob bergandan keyin, bu xizmat qoʻngʻiroq ekranidagi «Karnay» tugmasini bosadi — qoʻl tegizmasdan gaplashishingiz uchun. Boshqa paytda hech narsa qilmaydi va hech narsani saqlamaydi.</string>
     <string name="ev_speaker_clicked">Qoʻngʻiroq ekranidagi tugma bosilib, karnay yoqildi: %1$s</string>
     <string name="ev_speaker_click_failed">Karnay tugmasini bosib boʻlmadi (%1$s). AudioManager orqali urinib koʻrildi:</string>
     <string name="ev_speaker_no_a11y">Avto-karnay oʻchiq (maxsus imkoniyatlar xizmati yoqilmagan). AudioManager orqali urinib koʻrildi:</string>
@@ -63,9 +62,9 @@
     <string name="incall_hold">Kutish</string>
     <string name="incall_end">Tugatish</string>
     <string name="incall_choose_sim">Qaysi SIM orqali</string>
-    <string name="incall_say_alo">Javob berish uchun «allo» deng</string>
-    <string name="incall_listening">«Allo» tinglanmoqda…</string>
-    <string name="incall_heard">«Allo» eshitildi — javob berilmoqda</string>
+    <string name="incall_say_alo">Javob berish uchun %1$s deng</string>
+    <string name="incall_listening">%1$s tinglanmoqda…</string>
+    <string name="incall_heard">%1$s eshitildi — javob berilmoqda</string>
     <string name="incall_voice_off">Ovozli javob oʻchiq</string>
     <string name="notif_incoming_channel">Kiruvchi qoʻngʻiroqlar</string>
     <string name="notif_ongoing_channel">Joriy qoʻngʻiroqlar</string>
@@ -110,12 +109,12 @@
     <string name="ui_back">Orqaga</string>
     <string name="ui_battery_reported_off">Android maʼlumotiga koʻra batareya optimallashtirish oʻchiq ✓. (Xiaomi’ning oʻz sozlamasi bu yerda koʻrinmasligi mumkin.)</string>
     <string name="ui_battery_reported_on">Android maʼlumotiga koʻra batareya optimallashtirish yoqilgan. (Xiaomi’ning oʻz sozlamasi bu yerda koʻrinmasligi mumkin.)</string>
-    <string name="ui_blocker_model">oʻzbekcha nutq modelini (assets/model-uz) qoʻshib, ilovani qayta yigʻing</string>
+    <string name="ui_blocker_model">nutq modellarini (assets/model-uz, model-ru, model-en) qoʻshib, ilovani qayta yigʻing</string>
     <string name="ui_blocker_model_loading">nutq modeli tayyor boʻlishini kuting</string>
     <string name="ui_blocker_perms">barcha ruxsatlarni bering</string>
     <string name="ui_cancel">Bekor qilish</string>
     <string name="ui_check_battery">Batareya optimallashtirish oʻchiq (Android maʼlumotiga koʻra)</string>
-    <string name="ui_check_model_asset">Ilovada oʻzbekcha nutq modeli bor</string>
+    <string name="ui_check_model_asset">Ilovada nutq modeli bor: %1$s</string>
     <string name="ui_check_model_ready">Model telefonda tayyor (internetsiz ishlaydi)</string>
     <string name="ui_clear">Tozalash</string>
     <string name="ui_clear_log_q">Hodisalar jurnalini tozalaysizmi?</string>
@@ -139,21 +138,21 @@
     <string name="ui_event_stopped">Tinglash toʻxtadi</string>
     <string name="ui_event_test_hit">Sinovda eshitildi</string>
     <string name="ui_event_timeout">Vaqt tugadi</string>
-    <string name="ui_event_wake">«Alo» eshitildi</string>
+    <string name="ui_event_wake">Javob soʻzi eshitildi</string>
     <string name="ui_fix">Tuzatish</string>
     <string name="ui_language">Til</string>
     <string name="ui_last20">Oxirgi 20 ta hodisa</string>
     <string name="ui_listens_for">Tinglanadigan soʻzlar: %1$s</string>
-    <string name="ui_listens_for_grammar">Tinglanadigan soʻzlar: %1$s (faqat shu soʻzlar)</string>
+    <string name="ui_listens_for_grammar">Tinglanadigan soʻzlar: %1$s (faqat shularga javob beradi)</string>
     <string name="ui_make_default">Standart qilish</string>
     <string name="ui_master_off">Oʻchirilgan</string>
-    <string name="ui_master_on">Yoqilgan: telefon jiringlaganda javob berish uchun «alo» deng</string>
-    <string name="ui_master_title">«Alo» deb qoʻngʻiroqqa javob berish</string>
+    <string name="ui_master_on">Yoqilgan: telefon jiringlaganda javob berish uchun %1$s deng</string>
+    <string name="ui_master_title">Ovoz bilan javob berish</string>
     <string name="ui_model_preparing">Nutq modeli tayyorlanmoqda (birinchi marta bir necha soniya oladi)…</string>
     <string name="ui_no_events">Hozircha hodisalar yoʻq. Qoʻngʻiroq kelganda shu yerda paydo boʻladi.</string>
     <string name="ui_not_listening">Tinglanmayapti</string>
     <string name="ui_not_xiaomi">Bu qadamlar Xiaomi, Redmi va POCO telefonlari uchun. Bu telefon oʻzini %1$s deb koʻrsatmoqda.</string>
-    <string name="ui_onboarding_intro">Alo Answer «alo» deganingizda qoʻngʻiroqqa javob berishi uchun bu ruxsatlar kerak. Har biri faqat ostida yozilgan maqsadda ishlatiladi.</string>
+    <string name="ui_onboarding_intro">Alo Answer %1$s deganingizda qoʻngʻiroqqa javob berishi uchun bu ruxsatlar kerak. Har biri faqat ostida yozilgan maqsadda ishlatiladi.</string>
     <string name="ui_open_accessibility">Maxsus imkoniyatlarni ochish</string>
     <string name="ui_open_app_info">Ilova haqida</string>
     <string name="ui_open_dialer">Raqam terish</string>
@@ -167,15 +166,15 @@
     <string name="ui_perm_title_notifications">Bildirishnomalar</string>
     <string name="ui_perm_title_overlay">Boshqa ilovalar ustidan koʻrsatish</string>
     <string name="ui_perm_title_phone">Telefon holati</string>
-    <string name="ui_perm_why_answer">«Alo» deganingizdan keyin jiringlayotgan qoʻngʻiroqni qabul qilish uchun.</string>
-    <string name="ui_perm_why_mic">«Alo»ni faqat telefon jiringlayotganda (koʻpi bilan 30 soniya) yoki sinov paytida tinglaydi. Nutq internetsiz, telefonning oʻzida taniladi; ilovada internet ruxsati yoʻq va ovoz saqlanmaydi.</string>
+    <string name="ui_perm_why_answer">%1$s deganingizdan keyin jiringlayotgan qoʻngʻiroqni qabul qilish uchun.</string>
+    <string name="ui_perm_why_mic">%1$s soʻzini faqat telefon jiringlayotganda (koʻpi bilan 30 soniya) yoki sinov paytida tinglaydi. Nutq internetsiz, telefonning oʻzida taniladi; ilovada internet ruxsati yoʻq va ovoz saqlanmaydi.</string>
     <string name="ui_perm_why_notifications">Mikrofon ochiq boʻlganda Android bildirishnoma koʻrsatadi. Ovozli javob ishga tushmay qolsa, ilova sababini ham bildirishnoma orqali aytadi.</string>
     <string name="ui_perm_why_overlay">Android ilovaga fonda mikrofondan foydalanishga faqat tinglash ilova ekranda turganida boshlangan boʻlsa ruxsat beradi. Shuning uchun telefon jiringlaganda ilova bir soniyadan kam vaqtga koʻrinmas oyna ochadi. Bu oynani ochish uchun shu ruxsat kerak.</string>
     <string name="ui_perm_why_phone">Telefon jiringlay boshlaganini, javob berilganini yoki qoʻngʻiroq tugaganini bilish uchun. Qoʻngʻiroq qilayotgan raqam oʻqilmaydi.</string>
     <string name="ui_permanently_denied">Avval «Ruxsat bermaslik»ni tanlagansiz, shuning uchun Android qayta soʻramaydi. Sozlamalar → Ruxsatlar boʻlimida uni yoqing.</string>
     <string name="ui_permissions">Ruxsatlar</string>
     <string name="ui_perms_missing">Baʼzi ruxsatlar berilmagan</string>
-    <string name="ui_say_alo">«Alo» deng</string>
+    <string name="ui_say_alo">%1$s deng</string>
     <string name="ui_sensitivity">Aniqlash sezgirligi: %1$s</string>
     <string name="ui_sensitivity_help">Yuqori: «alo»ni osonroq ushlaydi, lekin adashib javob berishi koʻproq boʻladi. Past: xatolar kamroq, lekin qaytarib aytishingizga toʻgʻri kelishi mumkin. Keyingi qoʻngʻiroq yoki sinovdan boshlab amal qiladi.</string>
     <string name="ui_setup_check">Sozlash tekshiruvi</string>
@@ -214,7 +213,7 @@
     <string name="ui_step_overlay_title">Boshqa ilovalar ustidan koʻrsatish: yoqilgan</string>
     <string name="ui_step_overlay_why">Telefon jiringlaganda ilovaga tinglash oynasini ochishga imkon beradigan Android ruxsati.</string>
     <string name="ui_test_busy">Hozir qoʻngʻiroq jiringlayapti. Sinovni u tugagandan keyin qiling.</string>
-    <string name="ui_test_footnote">60 soniyagacha tinglaydi va hech narsaga javob bermaydi. Haqiqiy qoʻngʻiroqda rington mikrofon yonida chalinadi, shuning uchun «alo»ni ushlash bu yerdagidan qiyinroq boʻlishi mumkin. Bir-ikki metr uzoqdan ham sinab koʻring.</string>
+    <string name="ui_test_footnote">60 soniyagacha tinglaydi va hech narsaga javob bermaydi. Haqiqiy qoʻngʻiroqda rington mikrofon yonida chalinadi, shuning uchun javob soʻzini ushlash bu yerdagidan qiyinroq boʻlishi mumkin. Bir-ikki metr uzoqdan ham sinab koʻring.</string>
     <string name="ui_test_listening">Tinglashni sinash</string>
     <string name="ui_to_turn_on">Yoqish uchun: %1$s</string>
     <string name="ui_xiaomi_failed">Sozlamalarni ochib boʻlmadi. Koʻrsatilgan yoʻldan boring.</string>
@@ -223,8 +222,8 @@
     <string name="ui_xiaomi_intro">HyperOS fondagi ilovalarni oddiy Androidga qaraganda ancha qattiq toʻxtatadi. Bu sozlamalarsiz telefon jiringlashi mumkin, lekin hech narsa sodir boʻlmaydi.</string>
     <string name="ui_xiaomi_setup">Xiaomi / Redmi sozlamalari</string>
     <plurals name="ui_heard_times">
-        <item quantity="one">«Alo» %d marta eshitildi</item>
-        <item quantity="other">«Alo» %d marta eshitildi</item>
+        <item quantity="one">%d marta eshitildi</item>
+        <item quantity="other">%d marta eshitildi</item>
     </plurals>
 
     <!-- ===== 2.1: one app language, phone app features, call screen ===== -->
@@ -239,7 +238,7 @@
     <string name="ui_level_very_high">Juda yuqori</string>
     <string name="ui_sens_low_hint">Kamroq adashadi</string>
     <string name="ui_sens_high_hint">Osonroq eshitadi</string>
-    <string name="ui_test_listening_sub">«Alo»ni qanchalik yaxshi eshitishini tekshiring</string>
+    <string name="ui_test_listening_sub">Javob soʻzingizni qanchalik yaxshi eshitishini tekshiring</string>
     <string name="ui_dialer_on_short">Alo Answer — standart telefon ilovasi</string>
     <string name="ui_dialer_off_short">Alo Answer’ni telefon ilovasi qiling: ovozli javob eng ishonchli ishlaydi va karnay oʻzi yoqiladi. Istalgan payt telefon sozlamalaridan qaytarish mumkin.</string>
     <string name="ui_open_dialer_sub">Soʻnggi qoʻngʻiroqlar, kontaktlar, klaviatura</string>
@@ -315,4 +314,43 @@
         <item quantity="one">%d ta oʻtkazib yuborilgan qoʻngʻiroq</item>
         <item quantity="other">%d ta oʻtkazib yuborilgan qoʻngʻiroq</item>
     </plurals>
+
+    <!-- Answer words -->
+    <string name="dialer_voice_off">Oʻchiq</string>
+    <string name="dialer_voice_on_desc">Ovoz bilan javob yoqilgan: %1$s</string>
+    <string name="dialer_voice_off_desc">Ovoz bilan javob oʻchiq</string>
+    <string name="dialer_voice_intro_on">Telefon jiringlaganda %1$s desangiz, ilova oʻzi javob beradi. Soʻzni oʻzingiz tanlashingiz mumkin: oʻzbek, rus yoki ingliz tilida.</string>
+    <string name="dialer_voice_intro_off">Telefon jiringlaganda %1$s desangiz, ilova oʻzi javob beradi. Hozir bu oʻchiq.</string>
+    <string name="dialer_voice_pick">Soʻzni tanlash</string>
+    <string name="dialer_voice_turn_on">Yoqish</string>
+    <string name="dialer_voice_dismiss">Yopish</string>
+    <string name="wake_lang_uz">Oʻzbekcha</string>
+    <string name="wake_lang_ru">Ruscha</string>
+    <string name="wake_lang_en">Inglizcha</string>
+    <string name="ui_wake_multi_lang">Bir necha tildagi soʻzlar belgilangan: ilova har bir tilning modeli bilan birga tinglaydi, shuning uchun biroz kechroq boshlaydi va biroz koʻproq quvvat oladi.</string>
+    <string name="ev_wake_word">«%1$s»</string>
+    <string name="ev_wake_word_detail">«%1$s» (%2$s)</string>
+    <string name="wake_quote">«%1$s»</string>
+    <string name="wake_or">%1$s yoki %2$s</string>
+    <string name="ui_wake_title">Javob soʻzi</string>
+    <string name="ui_wake_intro">Telefon jiringlaganda shu yerda belgilangan soʻzlardan birini aytsangiz, ilova javob beradi. Tayyor soʻzlarni belgilang yoki oʻzbek, rus, ingliz tilida oʻzingiznikini qoʻshing. Bitta yoki ikkita soʻz eng yaxshisi: qancha koʻp belgilasangiz, adashib javob berishi shuncha koʻpayadi.</string>
+    <string name="ui_wake_default">Standart</string>
+    <string name="ui_wake_own">Oʻz soʻzlaringiz</string>
+    <string name="ui_wake_add">Soʻz yoki ibora qoʻshish</string>
+    <string name="ui_wake_add_sub">Oʻzbek, rus yoki ingliz tilida, koʻpi bilan %1$d ta soʻz</string>
+    <string name="ui_wake_add_hint">Masalan: %1$s</string>
+    <string name="ui_wake_add_help">Oʻzbekcha soʻzni lotin yoki kirill harflarida yozish mumkin. Ilova nutq modeli har bir soʻzni bilishini tekshiradi: model bilmagan soʻzni eshita olmaydi.</string>
+    <string name="ui_wake_add_btn">Qoʻshish</string>
+    <string name="ui_wake_checking">Tekshirilmoqda…</string>
+    <string name="ui_wake_unknown">Nutq modeli buni bilmaydi: %1$s. Boshqacha yozib koʻring yoki boshqa soʻz tanlang.</string>
+    <string name="ui_wake_check_failed">Soʻzni hozir tekshirib boʻlmadi. Qaytadan urinib koʻring.</string>
+    <string name="ui_wake_short">Bu soʻz juda qisqa: ilova oʻxshash tovushni eshitib, adashib javob berishi mumkin. Baribir qoʻshish uchun «Qoʻshish»ni yana bosing.</string>
+    <string name="ui_wake_too_long">Koʻpi bilan %1$d ta soʻz yozing.</string>
+    <string name="ui_wake_need_one">Kamida bitta soʻz belgilangan boʻlishi kerak.</string>
+    <string name="ui_wake_delete">Oʻchirish</string>
+    <string name="ui_wake_delete_q">%1$s oʻchirilsinmi?</string>
+    <string name="ui_wake_many">Koʻp soʻz belgilangan: ilova adashib javob berishi koʻpayishi mumkin.</string>
+    <string name="ui_wake_applies">Keyingi qoʻngʻiroq yoki sinovdan boshlab amal qiladi.</string>
+    <string name="ui_wake_limit">Koʻpi bilan %1$d ta soʻz qoʻshish mumkin.</string>
+    <string name="ui_last_heard">Oxirgisi: %1$s</string>
 </resources>
